@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="rw">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CEP RP Tumba College</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Segoe UI', Arial, sans-serif; line-height: 1.6; background: #f9f9fb; color: #333; }
+
+    /* HEADER */
+    header {
+      background: #002147;
+      color: #fff;
+      padding: 15px 30px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+    }
+    header h1 { font-size: 1.5rem; }
+    nav ul { list-style: none; display: flex; gap: 20px; }
+    nav a { color: #fff; text-decoration: none; font-weight: 500; transition: 0.3s; }
+    nav a:hover { color: #ffd700; }
+
+    /* HERO SLIDESHOW */
+    .hero {
+      position: relative;
+      height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      color: #fff;
+      overflow: hidden;
+    }
+    .hero::before {
+      content: "";
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,33,71,0.6);
+      z-index: 1;
+    }
+    .hero-content {
+      position: relative;
+      z-index: 2;
+      max-width: 800px;
+      padding: 20px;
+    }
+    .hero h2 { font-size: 2.8rem; margin-bottom: 20px; }
+    .hero p { font-size: 1.3rem; margin-bottom: 30px; }
+    .btn {
+      display: inline-block;
+      background: #ffd700;
+      color: #002147;
+      padding: 12px 25px;
+      margin: 10px;
+      border-radius: 30px;
+      font-weight: bold;
+      text-decoration: none;
+      transition: 0.3s;
+    }
+    .btn:hover { background: #fff; color: #002147; }
+
+    /* SLIDESHOW BACKGROUND */
+    .slideshow {
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      z-index: 0;
+    }
+    .slideshow img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      position: absolute;
+      top: 0; left: 0;
+      opacity: 0;
+      transition: opacity 1.5s ease-in-out;
+    }
+    .slideshow img.active { opacity: 1; }
+
+    /* ABOUT */
+    .about {
+      padding: 60px 20px;
+      text-align: center;
+      max-width: 900px;
+      margin: auto;
+    }
+    .about h2 { color: #002147; margin-bottom: 20px; font-size: 2rem; }
+    .about p { font-size: 1.1rem; color: #555; }
+
+    /* FOOTER */
+    footer {
+      background: #00152e;
+      color: #ccc;
+      padding: 40px 20px;
+    }
+    .footer-container {
+      max-width: 1100px;
+      margin: auto;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 20px;
+    }
+    .footer-box h3 {
+      color: #ffd700;
+      margin-bottom: 15px;
+    }
+    .footer-box p {
+      margin-bottom: 8px;
+      font-size: 0.95rem;
+    }
+    .footer-bottom {
+      text-align: center;
+      border-top: 1px solid #444;
+      margin-top: 20px;
+      padding-top: 15px;
+      font-size: 0.9rem;
+      color: #aaa;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- HEADER -->
+  <header>
+    <h1>CEP RP Tumba College</h1>
+    <nav>
+      <ul>
+        <li><a href="index.html">Ahabanza</a></li>
+        <li><a href="schedule.html">Gahunda</a></li>
+        <li><a href="#">Services</a></li>
+        <li><a href="#">Choirs</a></li>
+        <li><a href="#">Contact</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <!-- HERO -->
+  <section class="hero">
+    <!-- Slideshow background -->
+    <div class="slideshow">
+      <img src="1.jpg" class="active" alt="Background 1">
+      <img src="2.jpg" alt="Background 2">
+      <img src="3.jpg" alt="Background 3">
+      <img src="4.jpg" alt="Background 4">
+    </div>
+
+    <div class="hero-content">
+      <h2>Welcome to CEP RP Tumba College</h2>
+      <p>"Kugarura imitima y'abantu ku Mana binyuze mu Ijambo n'indirimbo"</p>
+      <a href="kwiyandikisha.html" class="btn">Kwiyandikisha nk'Umukristo Mushya</a>
+      <a href="admin.html" class="btn">Kwinjira nk'Umuyobozi</a>
+    </div>
+  </section>
+
+  <!-- ABOUT -->
+  <section class="about">
+    <h2>Abo Turi Bo</h2>
+    <p>
+      CEP RP Tumba College ni ihuriro ry'abanyeshuri n'abanyamuryango
+      rigamije kugeza ubutumwa bwiza ku bantu bose binyuze mu ijambo ry'Imana,
+      indirimbo, no gufasha mu bikorwa bitandukanye by’amasengesho.
+    </p>
+  </section>
+
+  <!-- FOOTER -->
+  <footer>
+    <div class="footer-container">
+      <div class="footer-box">
+        <h3>Abayobozi Bakuru</h3>
+        <p>President: 0780105651 - Zebulon Izabayo</p>
+        <p>Vice President: 0791811475 - Mugisha Emmanuel</p>
+        <p>Vice President (Social): 0787861849 - Niyigaba Aline</p>
+      </div>
+      <div class="footer-box">
+        <h3>Abashinzwe Imirimo</h3>
+        <p>Secretary: 0781395758 - Amahirwe Regine</p>
+        <p>Accountant: 0789941787 - Ihozo Utete Melissa</p>
+        <p>Media: 0788685302 - Itanga Ishaka Marc</p>
+      </div>
+      <div class="footer-box">
+        <h3>Abajyanama</h3>
+        <p>Prayer Advisor: 0784606702 - Muhoza Jean Cloude</p>
+        <p>Social Advisor: 0788611325 - Ami Fiable</p>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p>&copy; 2025 CEP RP Tumba College | Byakozwe n'abanyamuryango</p>
+    </div>
+  </footer>
+
+  <!-- JAVASCRIPT SLIDESHOW -->
+  <script>
+    const slides = document.querySelectorAll('.slideshow img');
+    let current = 0;
+
+    setInterval(() => {
+      slides[current].classList.remove('active');
+      current = (current + 1) % slides.length;
+      slides[current].classList.add('active');
+    }, 5000); // buri masegonda 5
+  </script>
+
+</body>
+</html>
