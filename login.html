@@ -61,7 +61,8 @@
       margin-top:18px;
       width:100%;
       height:160px;
-      background: url('1.jpg') center/cover no-repeat;
+      /* Ukeneye ifoto yitwa 1.jpg muri folder yawe */
+      background: url('1.jpg') center/cover no-repeat; 
       border-radius:8px;
       opacity:0.95;
       box-shadow: 0 6px 20px rgba(2,6,23,0.3) inset;
@@ -129,8 +130,8 @@
       font-weight:600;
       display:none;
     }
-    .alert.error{ background:rgba(231,76,60,0.08); color:var(--danger); border:1px solid rgba(231,76,60,0.12); display:block; }
-    .alert.success{ background:rgba(22,160,133,0.06); color:var(--success); border:1px solid rgba(22,160,133,0.12); display:block; }
+    .alert.error{ background:rgba(231,76,60,0.08); color:var(--danger); border:1px solid rgba(231,76,60,0.12); }
+    .alert.success{ background:rgba(22,160,133,0.06); color:var(--success); border:1px solid rgba(22,160,133,0.12); }
 
     @media (max-width:900px){
       .card{ grid-template-columns:1fr; }
@@ -191,13 +192,13 @@
   <script type="module">
     import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
-    // <-- REPLACE THESE with your Supabase project values -->
+    // <-- KOSORA HANO AMAKURU YA PROJECT YAWE -->
     const SUPABASE_URL = "https://snasuickudieijxxwonw.supabase.co";
     const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNuYXN1aWNrdWRpZWlqeHh3b253Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTkzNDY5OTMsImV4cCI6MjA3NDkyMjk5M30.i58HzvLSVO_2_675U38iaxrBQPzdtPOS0yI0HbZcof4";
     // ----------------------------------------------------------------
 
     const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
-      auth: { persistSession: true, detectSessionInUrl: true }
+        auth: { persistSession: true, detectSessionInUrl: true }
     });
 
     const loginForm = document.getElementById('loginForm');
@@ -208,165 +209,171 @@
     const btnGoogle = document.getElementById('btnGoogle');
 
     function showError(msg){
-      successEl.style.display = 'none';
-      alertEl.innerText = msg;
-      alertEl.style.display = 'block';
+        successEl.style.display = 'none';
+        alertEl.innerText = msg;
+        alertEl.style.display = 'block';
     }
     function showSuccess(msg){
-      alertEl.style.display = 'none';
-      successEl.innerText = msg;
-      successEl.style.display = 'block';
+        alertEl.style.display = 'none';
+        successEl.innerText = msg;
+        successEl.style.display = 'block';
     }
 
-    // Map role -> dashboard page
+    // Map role -> dashboard page (Koresha admin_dashboard.html twakoze)
     const roleRedirect = {
-      president: 'president.html',
-      vice_president: 'dashboard_vp.html',
-      accountant: 'dashboard_accountant.html',
-      media: 'dashboard_media.html',
-      secretary: 'dashboard_secretary.html',
-      advisor: 'dashboard_advisor.html',
-      member: 'dashboard_member.html'
+        'president': 'president.html', 
+        'vice_president': 'admin_dashboard.html', 
+        'accountant': 'admin_dashboard.html',
+        'media': 'dashboard_media.html',
+        'secretary': 'admin_dashboard.html',
+        'advisor': 'admin_dashboard.html',
+        'member': 'dashboard.html' 
     };
 
-    // Helper: fetch role from users table by auth user id, fallback to email
+    // -------------------------------------------------------------
+    // FUNCTION YAKOSOWE: Ifata Role ikoresheje user_roles (Junction Table)
+    // -------------------------------------------------------------
     async function fetchUserRole(authUser) {
-      if (!authUser) return null;
-      // try by id first
-      let { data, error } = await supabase
-        .from('users')
-        .select('role')
-        .eq('id', authUser.id)
-        .maybeSingle();
+        if (!authUser) return null;
 
-      if (error) {
-        console.warn('Error fetching role by id:', error.message);
-      }
-      if (data && data.role) return data.role;
+        // 1. Gukurura Roles zose umukristo afite
+        const { data: userRoleData, error } = await supabase
+            .from('user_roles')
+            .select('role:roles(name)') 
+            .eq('user_id', authUser.id);
+        
+        if (error) {
+            console.error('Error fetching role from user_roles (RLS?):', error.message);
+            return 'member'; 
+        }
 
-      // fallback: try by email
-      const email = authUser.email;
-      if (email) {
-        const { data: byEmail, error: e2 } = await supabase
-          .from('users')
-          .select('role')
-          .eq('email', email)
-          .maybeSingle();
+        if (userRoleData && userRoleData.length > 0) {
+            const roleNames = userRoleData.map(ur => ur.role.name);
 
-        if (e2) console.warn('Error fetching role by email:', e2.message);
-        if (byEmail && byEmail.role) return byEmail.role;
-      }
-      return null;
+            // 2. Gufata Role yo hejuru (Priority for Admin Access)
+            const adminRoles = ['president', 'vice_president', 'secretary', 'accountant', 'advisor'];
+            
+            for (const role of adminRoles) {
+                if (roleNames.includes(role)) {
+                    return role; 
+                }
+            }
+            return 'member'; 
+        }
+
+        return 'member'; 
     }
+    // -------------------------------------------------------------
+
 
     // Sign in with email/password
     loginForm.addEventListener('submit', async (ev) => {
-      ev.preventDefault();
-      alertEl.style.display = 'none';
-      successEl.style.display = 'none';
+        ev.preventDefault();
+        alertEl.style.display = 'none';
+        successEl.style.display = 'none';
 
-      const email = document.getElementById('email').value.trim();
-      const password = document.getElementById('password').value;
+        const email = document.getElementById('email').value.trim();
+        const password = document.getElementById('password').value;
 
-      if (!email || !password) {
-        showError('Email na password birakenewe.');
-        return;
-      }
-
-      btnLogin.disabled = true;
-      btnLogin.innerText = 'Birimo...';
-
-      try {
-        const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-        if (error) {
-          showError('Login failed: ' + error.message);
-          btnLogin.disabled = false;
-          btnLogin.innerText = 'Injira';
-          return;
+        if (!email || !password) {
+            showError('Email na password birakenewe.');
+            return;
         }
 
-        const user = data.user;
-        if (!user) {
-          showError('Ntushobora kwinjira: nta user yagaragaye.');
-          btnLogin.disabled = false;
-          btnLogin.innerText = 'Injira';
-          return;
+        btnLogin.disabled = true;
+        btnLogin.innerText = 'Birimo...';
+
+        try {
+            const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+            if (error) {
+                showError('Login failed: ' + error.message);
+                btnLogin.disabled = false;
+                btnLogin.innerText = 'Injira';
+                return;
+            }
+
+            const user = data.user;
+            if (!user) {
+                showError('Ntushobora kwinjira: nta user yagaragaye.');
+                btnLogin.disabled = false;
+                btnLogin.innerText = 'Injira';
+                return;
+            }
+
+            // fetch role
+            const role = await fetchUserRole(user);
+
+            // if no role found, set as member by default
+            const resolvedRole = role || 'member';
+
+            showSuccess('Murakaza neza! Uri kwinjira nka ' + resolvedRole.toUpperCase());
+
+            // short delay then redirect
+            setTimeout(() => {
+                const dest = roleRedirect[resolvedRole] || 'dashboard.html';
+                window.location.href = dest;
+            }, 900);
+
+        } catch (err) {
+            console.error(err);
+            showError('Habaye ikibazo utazi: ' + (err.message || err));
+        } finally {
+            btnLogin.disabled = false;
+            btnLogin.innerText = 'Injira';
         }
-
-        // fetch role
-        const role = await fetchUserRole(user);
-
-        // if no role found, set as member by default
-        const resolvedRole = role || 'member';
-
-        showSuccess('Murakaza neza! Uri kwinjira nka ' + resolvedRole);
-
-        // short delay then redirect
-        setTimeout(() => {
-          const dest = roleRedirect[resolvedRole] || 'dashboard_member.html';
-          window.location.href = dest;
-        }, 900);
-
-      } catch (err) {
-        console.error(err);
-        showError('Habaye ikibazo utazi: ' + (err.message || err));
-      } finally {
-        btnLogin.disabled = false;
-        btnLogin.innerText = 'Injira';
-      }
     });
 
     // Forgot password flow: send reset link
     forgotLink.addEventListener('click', async (e) => {
-      e.preventDefault();
-      alertEl.style.display = 'none';
-      successEl.style.display = 'none';
+        e.preventDefault();
+        alertEl.style.display = 'none';
+        successEl.style.display = 'none';
 
-      const email = document.getElementById('email').value.trim();
-      if (!email) {
-        showError('Andika email yawe hejuru kugira ngo wohereze reset link.');
-        return;
-      }
-      try {
-        const { data, error } = await supabase.auth.resetPasswordForEmail(email, {
-          redirectTo: window.location.origin + '/reset-password.html' // optional: page to handle reset
-        });
-        if (error) {
-          showError('Error: ' + error.message);
-        } else {
-          showSuccess('Twatumije email yo gusubiza password. Reba inbox yawe.');
+        const email = document.getElementById('email').value.trim();
+        if (!email) {
+            showError('Andika email yawe hejuru kugira ngo wohereze reset link.');
+            return;
         }
-      } catch (err) {
-        console.error(err);
-        showError('Habaye ikibazo: ' + (err.message || err));
-      }
+        try {
+            const { error } = await supabase.auth.resetPasswordForEmail(email, {
+                redirectTo: window.location.origin + '/reset-password.html' // optional: page to handle reset
+            });
+            if (error) {
+                showError('Error: ' + error.message);
+            } else {
+                showSuccess('Twatumije email yo gusubiza password. Reba inbox yawe.');
+            }
+        } catch (err) {
+            console.error(err);
+            showError('Habaye ikibazo: ' + (err.message || err));
+        }
     });
 
     // Optional: Google OAuth sign-in
     btnGoogle.addEventListener('click', async () => {
-      try {
-        const { error } = await supabase.auth.signInWithOAuth({
-          provider: 'google',
-          options: { redirectTo: window.location.origin + '/oauth-callback.html' }
-        });
-        if (error) showError(error.message);
-      } catch (err) {
-        console.error(err);
-        showError('OAuth error: ' + (err.message || err));
-      }
+        try {
+            const { error } = await supabase.auth.signInWithOAuth({
+                provider: 'google',
+                options: { redirectTo: window.location.origin + '/oauth-callback.html' }
+            });
+            if (error) showError(error.message);
+        } catch (err) {
+            console.error(err);
+            showError('OAuth error: ' + (err.message || err));
+        }
     });
 
     // If already logged in (session), detect and redirect
     (async function checkSession() {
-      const { data } = await supabase.auth.getSession();
-      const session = data?.session;
-      if (session?.user) {
-        const role = await fetchUserRole(session.user);
-        const dest = roleRedirect[role] || 'dashboard_member.html';
-        // small timeout to show message quickly
-        showSuccess('Session yabonetse, uri kwerekeza kuri dashboard...');
-        setTimeout(()=> window.location.href = dest, 700);
-      }
+        const { data } = await supabase.auth.getSession();
+        const session = data?.session;
+        if (session?.user) {
+            const role = await fetchUserRole(session.user);
+            const dest = roleRedirect[role] || 'dashboard.html';
+            // small timeout to show message quickly
+            showSuccess('Session yabonetse, uri kwerekeza kuri dashboard...');
+            setTimeout(()=> window.location.href = dest, 700);
+        }
     })();
 
   </script>
