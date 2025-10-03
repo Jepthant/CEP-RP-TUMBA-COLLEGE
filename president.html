@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="rw">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Admin Dashboard | CEP Leadership</title>
+  
+  <script type="module">
+    import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+    // KOSORA: Supabase Project Values (Koresha izo wakoresheje mbere)
+    const SUPABASE_URL = "https://snasuickudieijxxwonw.supabase.co"; 
+    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNuYXN1aWNrdWRpZWlqeHh3b253Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTkzNDY5OTMsImV4cCI6MjA3NDkyMjk5M30.i58HzvLSVO_2_675U38iaxrBQPzdtPOS0yI0HbZcof4"; 
+    window.supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+        auth: { persistSession: true, detectSessionInUrl: false }
+    });
+  </script>
+
+  <style>
+    /* CSS yose ni nk'iya dashboard.html, twongeraho style ya Admin */
+    :root{
+      --bg:#f4f7fb;
+      --card:#ffffff;
+      --accent:#002147; 
+      --accent-2:#1f6feb; 
+      --gold:#ffd700;
+      --muted:#667085;
+      --success:#16a085;
+      --danger:#e74c3c;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0; background:var(--bg); font-family:Inter, sans-serif; color:#0f1724;
+      -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale;
+    }
+    .dashboard-wrap { display: flex; min-height: 100vh; }
+    .sidebar { width: 280px; background: var(--accent); color: white; padding: 24px 0; flex-shrink: 0; }
+    .logo-side { padding: 0 24px 30px; }
+    .logo-side h2 { margin: 0; font-size: 1.4rem; color: var(--gold); }
+    .nav-link { display: flex; align-items: center; padding: 14px 24px; color: rgba(255,255,255,0.8); text-decoration: none; transition: background 0.2s; font-weight: 500; }
+    .nav-link:hover { background: rgba(255,255,255,0.08); }
+    .nav-link.active { background: #003b73; color: white; border-left: 4px solid var(--gold); padding-left: 20px; font-weight: 700; }
+    .main-content { flex-grow: 1; padding: 30px 40px; }
+    .card { padding: 25px; background: var(--card); border-radius: 10px; box-shadow: 0 2px 8px rgba(15,23,36,0.05); margin-top: 20px; }
+    .form-group { margin-bottom: 15px; }
+    label { font-size: 0.9rem; color:#101828; margin-bottom: 5px; display: block; font-weight: 600; }
+    input, select, textarea { width: 100%; padding: 10px 12px; border-radius: 8px; border: 1px solid #e6eef8; font-size: 1rem; }
+    button.primary{ padding:12px 14px; border-radius:10px; border:none; background:var(--accent-2); color:white; font-weight:700; cursor:pointer; transition:background .2s; }
+    .alert { padding:10px 12px; border-radius:8px; font-weight:600; margin-bottom: 15px; display: none; }
+    .alert.error{ background:rgba(231,76,60,0.08); color:var(--danger); border:1px solid rgba(231,76,60,0.12); }
+    .alert.success{ background:rgba(22,160,133,0.06); color:var(--success); border:1px solid rgba(22,160,133,0.12); }
+
+    /* Tables Style (Service Requests) */
+    .data-table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+    .data-table th, .data-table td { padding: 12px 15px; text-align: left; border-bottom: 1px solid #e6eef8; font-size: 0.9rem; }
+    .data-table th { background: var(--bg); color: var(--accent); font-weight: 600; }
+    .data-table tr:hover { background: #fafafa; }
+    .status-badge { padding: 4px 8px; border-radius: 6px; font-size: 0.8rem; font-weight: 700; }
+    .status-pending { background: #ffe680; color: #cc8400; }
+    .status-approved { background: #b0ffc7; color: #16a085; }
+    .status-declined { background: #ffb3b3; color: #e74c3c; }
+    .status-completed { background: #d7e2ff; color: var(--accent); }
+    
+    /* Action Buttons */
+    .action-btn { background: none; border: 1px solid var(--accent-2); color: var(--accent-2); padding: 5px 10px; border-radius: 5px; margin-right: 5px; cursor: pointer; transition: background 0.2s; }
+    .action-btn:hover { background: var(--accent-2); color: white; }
+  </style>
+</head>
+<body>
+  <div class="dashboard-wrap">
+
+    <div class="sidebar">
+      <div class="logo-side">
+        <h2 style="color:var(--danger);">ADMIN CEP</h2>
+        <p style="color:var(--gold);">Gucunga Umuryango</p>
+      </div>
+
+      <a href="#" class="nav-link active" data-section="overview">📈 Overview</a>
+      <a href="#" class="nav-link" data-section="services">📝 Ibyifuzo bya Serivisi</a>
+      <a href="#" class="nav-link" data-section="role_management">🛡️ Gushyiraho Abayobozi</a>
+      <a href="#" class="nav-link" id="btnLogout">➡️ Gusohoka</a>
+    </div>
+
+    <div class="main-content">
+      <h1 style="color:var(--accent);">Konti y'Umuyobozi Mukuru (<span id="adminRoleDisplay">Loading...</span>)</h1>
+
+      <section id="overview-section">
+        <div class="card">
+            <h3>Ibirebana n'Imibare</h3>
+            <p>Hano niho hazajya haboneka imibare y'abanyamuryango, serivisi, n'ibindi by'ingenzi.</p>
+        </div>
+      </section>
+
+      <section id="services-section" style="display:none;">
+        <h2 style="color:var(--accent);">Ibyifuzo bya Serivisi by'Abanyamuryango</h2>
+        <div class="card">
+            <div id="serviceListAlert" class="alert"></div>
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Umukristo</th>
+                        <th>Ubwoko</th>
+                        <th>Status</th>
+                        <th>Igikorwa</th>
+                    </tr>
+                </thead>
+                <tbody id="serviceRequestsList">
+                    <tr><td colspan="5" style="text-align:center;">Nta byifuzo bihari cyangwa birimo gukururwa...</td></tr>
+                </tbody>
+            </table>
+        </div>
+      </section>
+      
+      <section id="role_management-section" style="display:none;">
+        <h2 style="color:var(--accent);">Gushyiraho cyangwa Guhindura Abayobozi</h2>
+        <div class="card">
+            <div id="roleAlert" class="alert"></div>
+            <form id="roleManagementForm">
+                <div class="form-group">
+                    <label for="memberEmail">Email y'Umunyamuryango (cyangwa UUID ya Supabase)</label>
+                    <input id="memberEmail" type="text" placeholder="Email (e.g., jane@example.com)" required>
+                </div>
+                <div class="form-group">
+                    <label for="newRole">Role Nshya</label>
+                    <select id="newRole" required>
+                        <option value="">-- Kura Roles--</option>
+                    </select>
+                </div>
+                <button class="primary" type="submit" id="btnAssignRole">Shyiraho/Hagarika Role</button>
+            </form>
+        </div>
+
+        <div class="card" style="margin-top:30px;">
+            <h3>Gushakisha Imyirondoro ya Buri Mukristo</h3>
+            <div id="userListAlert" class="alert"></div>
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Izina</th>
+                        <th>Email</th>
+                        <th>Roles</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody id="allUsersList">
+                    <tr><td colspan="4" style="text-align:center;">Abakristo bari gukururwa...</td></tr>
+                </tbody>
+            </table>
+        </div>
+      </section>
+    </div>
+  </div>
+
+<script type="module">
+    // Supabase client yagizwe Global hejuru
+    const supabase = window.supabase;
+    
+    // Elements zo mu Gice cya HTML
+    const sections = {
+        'overview': document.getElementById('overview-section'),
+        'services': document.getElementById('services-section'),
+        'role_management': document.getElementById('role_management-section'),
+    };
+    const navLinks = document.querySelectorAll('.nav-link[data-section]');
+    const roleAlert = document.getElementById('roleAlert');
+    const serviceListAlert = document.getElementById('serviceListAlert');
+    const userListAlert = document.getElementById('userListAlert');
+
+    let allRoles = [];
+    let currentUserRole = 'member'; // Default Role
+
+    function showAlert(el, msg, type = 'success') {
+        el.innerText = msg;
+        el.className = `alert ${type}`;
+        el.style.display = 'block';
+        setTimeout(() => el.style.display = 'none', 8000);
+    }
+
+    function showSection(sectionId) {
+        Object.keys(sections).forEach(key => {
+            sections[key].style.display = 'none';
+        });
+        if (sections[sectionId]) {
+            sections[sectionId].style.display = 'block';
+        }
+        navLinks.forEach(link => {
+            link.classList.remove('active');
+            if (link.getAttribute('data-section') === sectionId) {
+                link.classList.add('active');
+            }
+        });
+
+        // Gukurura amakuru bitewe n'igice
+        if (sectionId === 'services') fetchServiceRequests();
+        if (sectionId === 'role_management') {
+            fetchRoles();
+            fetchAllUsers();
+        }
+    }
+
+    // Navigation and Logout
+    navLinks.forEach(link => {
+        link.addEventListener('click', (e) => {
+            e.preventDefault();
+            showSection(e.currentTarget.getAttribute('data-section'));
+        });
+    });
+
+    document.getElementById('btnLogout').addEventListener('click', async (e) => {
+        e.preventDefault();
+        await supabase.auth.signOut();
+        window.location.href = 'login.html';
+    });
+
+    // -------------------------------------------------------------
+    // GUCUNGA IBYIFUZO (Service Requests Logic)
+    // -------------------------------------------------------------
+
+    async function fetchServiceRequests() {
+        // Gukurura ibyifuzo hamwe n'Izina ry'Umusaba
+        const { data: requests, error } = await supabase
+            .from('service_requests')
+            .select(`
+                id, 
+                service_type, 
+                details, 
+                status, 
+                requested_at, 
+                user_id,
+                users (full_name, email, phone) 
+            `)
+            .order('requested_at', { ascending: false });
+
+        const listEl = document.getElementById('serviceRequestsList');
+        listEl.innerHTML = '';
+        
+        if (error) {
+            listEl.innerHTML = `<tr><td colspan="5" style="color:var(--danger); text-align:center;">Gukurura byanze: ${error.message} (Genzura RLS Policy ya 'service_requests')</td></tr>`;
+            return;
+        }
+
+        if (requests.length === 0) {
+            listEl.innerHTML = `<tr><td colspan="5" style="text-align:center; color:var(--muted);">Nta byifuzo bishya bihari.</td></tr>`;
+            return;
+        }
+
+        requests.forEach(req => {
+            const user = req.users || { full_name: 'Unknown', email: 'N/A' };
+            
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>${req.id.substring(0, 4)}...</td>
+                <td>${user.full_name} (<a href="mailto:${user.email}">${user.email}</a>)</td>
+                <td>${req.service_type}</td>
+                <td><span class="status-badge status-${req.status}">${req.status.toUpperCase()}</span></td>
+                <td>
+                    <button class="action-btn" data-id="${req.id}" data-status="approved">Emeza</button>
+                    <button class="action-btn" data-id="${req.id}" data-status="declined" style="border-color:var(--danger); color:var(--danger);">Hagarika</button>
+                </td>
+            `;
+            listEl.appendChild(row);
+        });
+
+        listEl.addEventListener('click', handleServiceAction);
+    }
+
+    async function handleServiceAction(e) {
+        if (!e.target.classList.contains('action-btn')) return;
+        
+        const reqId = e.target.getAttribute('data-id');
+        const newStatus = e.target.getAttribute('data-status');
+        const { data: { user } } = await supabase.auth.getUser();
+
+        if (!user) return;
+
+        serviceListAlert.style.display = 'none';
+
+        const { error } = await supabase
+            .from('service_requests')
+            .update({ 
+                status: newStatus, 
+                approved_by: user.id,
+                // Iyi ikeneye RLS Policy yemereye President/Secretary gukora UPDATE
+            })
+            .eq('id', reqId);
+
+        if (error) {
+            showAlert(serviceListAlert, `Kugira status ${newStatus} byanze: ${error.message}`, 'error');
+        } else {
+            showAlert(serviceListAlert, `Icyifuzo ${reqId.substring(0, 4)}... cyashyizwe kuri ${newStatus.toUpperCase()}`, 'success');
+            fetchServiceRequests(); // Kongera gukurura
+        }
+    }
+
+
+    // -------------------------------------------------------------
+    // ROLE MANAGEMENT (Gushyiraho Abayobozi)
+    // -------------------------------------------------------------
+    
+    async function fetchRoles() {
+        const { data: roles, error } = await supabase
+            .from('roles')
+            .select('*')
+            .order('id', { ascending: true });
+
+        const selectEl = document.getElementById('newRole');
+        selectEl.innerHTML = '<option value="">-- Hitamo Role Nshya --</option>';
+
+        if (error) {
+            selectEl.innerHTML = `<option value="">Error: ${error.message}</option>`;
+            return;
+        }
+
+        allRoles = roles;
+        roles.forEach(role => {
+            selectEl.innerHTML += `<option value="${role.name}">${role.name.toUpperCase()} - ${role.description}</option>`;
+        });
+    }
+
+    async function fetchAllUsers() {
+        // Gukurura abakristo bose hamwe na roles zabo (koresha View niba ihari)
+        // Kubera ko View users_full idafite, dukoresheye query nini cyane
+        const { data: users, error } = await supabase
+            .from('users')
+            .select(`
+                id,
+                full_name,
+                email,
+                user_roles(role_id, role:roles(name)) 
+            `)
+            .order('full_name', { ascending: true });
+        
+        const listEl = document.getElementById('allUsersList');
+        listEl.innerHTML = '';
+        userListAlert.style.display = 'none';
+
+        if (error) {
+            listEl.innerHTML = `<tr><td colspan="4" style="color:var(--danger); text-align:center;">Error: ${error.message} (RLS kuri 'users' na 'user_roles')</td></tr>`;
+            return;
+        }
+
+        users.forEach(user => {
+            const roleNames = user.user_roles.map(ur => ur.role.name).join(' / ') || 'Nta Role';
+            
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>${user.full_name}</td>
+                <td>${user.email}</td>
+                <td>${roleNames}</td>
+                <td>
+                    <button class="action-btn" onclick="prefillRoleAssignment('${user.email}')">Guhindura Role</button>
+                </td>
+            `;
+            listEl.appendChild(row);
+        });
+    }
+    
+    // Function yo gushyira email mu gice cyo guhindura role
+    window.prefillRoleAssignment = (email) => {
+        document.getElementById('memberEmail').value = email;
+        showSection('role_management');
+        document.getElementById('memberEmail').focus();
+    };
+
+
+    document.getElementById('roleManagementForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const emailOrId = document.getElementById('memberEmail').value.trim();
+        const roleName = document.getElementById('newRole').value;
+        const btn = document.getElementById('btnAssignRole');
+
+        roleAlert.style.display = 'none';
+        btn.disabled = true;
+        btn.innerText = 'Birimo...';
+        
+        // 1. Kubona User ID kuva kuri Email
+        const { data: userToUpdate, error: userFetchError } = await supabase
+            .from('users')
+            .select('id')
+            .eq('email', emailOrId) // cyangwa ugakoresha eq('id', emailOrId)
+            .single();
+
+        if (userFetchError || !userToUpdate) {
+            showAlert(roleAlert, `User ntibonetse muri database (Email/ID ntabwo yanditse).`, 'error');
+            btn.disabled = false;
+            btn.innerText = 'Shyiraho/Hagarika Role';
+            return;
+        }
+
+        // 2. Kubona Role ID nshya
+        const roleData = allRoles.find(r => r.name === roleName);
+        if (!roleData) {
+            showAlert(roleAlert, `Role yatowe ntabwo ibonetse.`, 'error');
+            btn.disabled = false;
+            btn.innerText = 'Shyiraho/Hagarika Role';
+            return;
+        }
+
+        const roleId = roleData.id;
+
+        // 3. Gutanga Role mu buryo bwa UPSERT
+        const { error: roleAssignmentError } = await supabase
+            .from('user_roles')
+            .upsert({ user_id: userToUpdate.id, role_id: roleId }, { onConflict: 'user_id, role_id' });
+            // Iyi ikeneye RLS Policy yemereye President gukora INSERT/UPDATE kuri user_roles
+
+        if (roleAssignmentError) {
+            showAlert(roleAlert, `Gutanga Role byanze: ${roleAssignmentError.message}`, 'error');
+        } else {
+            showAlert(roleAlert, `Role ya ${roleName.toUpperCase()} yashyizwe kuri ${emailOrId} neza!`, 'success');
+            document.getElementById('roleManagementForm').reset();
+            fetchAllUsers(); // Kongera kureba list y'abakristo
+        }
+
+        btn.disabled = false;
+        btn.innerText = 'Shyiraho/Hagarika Role';
+    });
+
+
+    // -------------------------------------------------------------
+    // INITIALIZATION & RLS Check
+    // -------------------------------------------------------------
+    
+    // Gushakisha Role y'Umukristo
+    async function fetchUserRole(user) {
+        const { data: userRoleData } = await supabase
+            .from('user_roles')
+            .select('role:roles(name)')
+            .eq('user_id', user.id);
+        
+        if (userRoleData && userRoleData.length > 0) {
+            return userRoleData.map(ur => ur.role.name);
+        }
+        return ['member'];
+    }
+
+    (async function initializeAdminDashboard() {
+        const { data: { session } } = await supabase.auth.getSession();
+
+        if (!session?.user) {
+            window.location.href = 'login.html';
+            return;
+        }
+        
+        // Kureba niba Umukristo afite Role y'Ubuyobozi
+        const userRoles = await fetchUserRole(session.user);
+        currentUserRole = userRoles[0]; // Koresha role y'ibanze
+        
+        // Roles zemerera kwinjira muri Admin Dashboard
+        const adminRoles = ['president', 'vice_president', 'secretary', 'accountant'];
+
+        if (!adminRoles.some(role => userRoles.includes(role))) {
+            // Niba atari Admin, oherereza kuri dashboard y'abasanzwe
+            alert("Ntabwo wemerewe kwinjira muri Admin Dashboard. Ugomba kuba uri umwe mu Bayobozi.");
+            window.location.href = 'dashboard.html'; 
+            return;
+        }
+        
+        // Kwemeza ko Umukristo ari Admin
+        document.getElementById('adminRoleDisplay').innerText = userRoles.join(' / ').toUpperCase();
+        showSection('overview');
+        
+        // Gukurura roles zose zizakoreshwa
+        await fetchRoles(); 
+
+        // Kugira ngo Secretary akore byihuse
+        if (userRoles.includes('secretary') || userRoles.includes('president')) {
+             fetchServiceRequests();
+        }
+    })();
+
+</script>
+</body>
+</html>

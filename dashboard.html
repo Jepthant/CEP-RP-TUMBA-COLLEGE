@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="rw">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Dashboard | Umunyamuryango wa CEP</title>
+  
+  <script type="module">
+    import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+    window.supabase = createClient(
+        "https://snasuickudieijxxwonw.supabase.co", // KOSORA: SUPABASE_URL yawe
+        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNuYXN1aWNrdWRpZWlqeHh3b253Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTkzNDY5OTMsImV4cCI6MjA3NDkyMjk5M30.i58HzvLSVO_2_675U38iaxrBQPzdtPOS0yI0HbZcof4", // KOSORA: SUPABASE_ANON_KEY yawe
+        { auth: { persistSession: true, detectSessionInUrl: false } }
+    );
+  </script>
+
+  <style>
+    /* 1. Amabara n'Amategeko Rusange (CEP Branding) */
+    :root{
+      --bg:#f4f7fb;
+      --card:#ffffff;
+      --accent:#002147; /* Dark Blue */
+      --accent-2:#1f6feb; /* Bright Blue */
+      --gold:#ffd700;
+      --muted:#667085;
+      --success:#16a085;
+      --danger:#e74c3c;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      background:var(--bg);
+      font-family:Inter, "Segoe UI", Roboto, Arial, sans-serif;
+      color:#0f1724;
+      -webkit-font-smoothing:antialiased;
+      -moz-osx-font-smoothing:grayscale;
+    }
+
+    /* 2. Style ya Dashboard Structure */
+    .dashboard-wrap { display: flex; min-height: 100vh; }
+    .sidebar {
+      width: 280px;
+      background: var(--accent);
+      color: white;
+      padding: 24px 0;
+      box-shadow: 2px 0 10px rgba(0,0,0,0.15);
+      flex-shrink: 0;
+    }
+    .logo-side { padding: 0 24px 30px; }
+    .logo-side h2 { margin: 0; font-size: 1.4rem; color: var(--gold); }
+    .logo-side p { margin: 5px 0 0; font-size: 0.85rem; color: rgba(255,255,255,0.7); }
+
+    /* Navigation */
+    .nav-link {
+      display: flex; align-items: center; gap: 12px;
+      padding: 14px 24px;
+      color: rgba(255,255,255,0.8);
+      text-decoration: none;
+      transition: background 0.2s;
+      font-weight: 500;
+    }
+    .nav-link:hover { background: rgba(255,255,255,0.08); color: white; }
+    .nav-link.active {
+      background: #003b73;
+      color: white;
+      border-left: 4px solid var(--gold);
+      padding-left: 20px;
+      font-weight: 700;
+    }
+    .main-content { flex-grow: 1; padding: 30px 40px; }
+
+    /* 3. Style y'Ibyiciro */
+    .profile-card {
+      background: var(--card);
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 6px 20px rgba(15,23,36,0.08);
+      display: flex;
+      gap: 30px;
+      align-items: center;
+      margin-bottom: 30px;
+      border-top: 5px solid var(--accent-2);
+    }
+    .profile-img {
+      width: 110px;
+      height: 110px;
+      border-radius: 50%;
+      background: #eee;
+      border: 4px solid var(--gold);
+      object-fit: cover;
+      cursor: pointer; /* Ku ifoto yo guhindura */
+    }
+    .details h3 { margin: 0 0 5px; color: var(--accent); font-size: 1.6rem; }
+    .details p { margin: 0; color: var(--muted); font-size: 0.95rem; line-height: 1.4; }
+    .details strong { color: #101828; }
+
+    .card {
+        padding: 25px;
+        background: var(--card);
+        border-radius: 10px;
+        box-shadow: 0 2px 8px rgba(15,23,36,0.05);
+        margin-top: 20px;
+    }
+    .form-group { margin-bottom: 15px; }
+    label { font-size: 0.9rem; color:#101828; margin-bottom: 5px; display: block; font-weight: 600; }
+    input, select, textarea {
+      width: 100%;
+      padding: 10px 12px;
+      border-radius: 8px;
+      border: 1px solid #e6eef8;
+      background: #fff;
+      font-size: 1rem;
+      outline: none;
+    }
+    
+    /* Buttons and Alerts */
+    button.primary{
+      padding:12px 14px; border-radius:10px; border:none;
+      background:var(--accent-2); color:white; font-weight:700;
+      cursor:pointer; transition:background .2s;
+    }
+    .alert { padding:10px 12px; border-radius:8px; font-weight:600; margin-bottom: 15px; }
+    .alert.error{ background:rgba(231,76,60,0.08); color:var(--danger); border:1px solid rgba(231,76,60,0.12); }
+    .alert.success{ background:rgba(22,160,133,0.06); color:var(--success); border:1px solid rgba(22,160,133,0.12); }
+
+    @media (max-width: 900px) {
+      .sidebar { display: none; }
+      .main-content { padding: 20px; }
+      .profile-card { flex-direction: column; text-align: center; }
+    }
+  </style>
+</head>
+<body>
+  <div class="dashboard-wrap">
+
+    <div class="sidebar">
+      <div class="logo-side">
+        <h2>CEP Dashboard</h2>
+        <p>Muri Kristo Twatsinze</p>
+      </div>
+
+      <a href="#" class="nav-link active" data-section="home">🏠 Aho Nkorera</a>
+      <a href="#" class="nav-link" data-section="profile">👤 Imyirondoro</a>
+      <a href="#" class="nav-link" data-section="service">🙏 Kwaka Serivisi</a>
+      <a href="#" class="nav-link" data-section="documents">📄 Inyandiko</a>
+      <a href="#" class="nav-link" id="btnLogout">➡️ Gusohoka</a>
+    </div>
+
+    <div class="main-content">
+      <h1 style="color:var(--accent);">Murakaza Neza, <span id="memberName">Umunyamuryango</span></h1>
+
+      <section id="home-section">
+        <div class="profile-card">
+          <img id="profilePhoto" class="profile-img" src="https://via.placeholder.com/110?text=CEP" alt="Ifoto ya Profile">
+          <div class="details">
+            <h3 id="profileName">Izina Ryombi</h3>
+            <p><strong style="color:var(--gold);">Urwego:</strong> <span id="profileRole">Umunyamuryango usanzwe</span></p>
+            <p><strong>Email:</strong> <span id="profileEmail">email@example.com</span></p>
+            <p><strong>Itorero (Paruwase):</strong> <span id="profileChurch">ADEPR Paruwase</span></p>
+            <p><strong>Telefoni:</strong> <span id="profilePhone">07XXXXXXXX</span></p>
+          </div>
+          <button class="primary" style="margin-left:auto;" onclick="showSection('profile')">Guhindura</button>
+        </div>
+
+        <h2 style="color:var(--accent);">Ibyifuzo Byanjye (Serivisi)</h2>
+        <div class="card" style="border-left: 5px solid var(--accent-2);">
+            <p style="color:var(--muted);">Nta cyifuzo uheruka gutanga. Kanda **'Kwaka Serivisi'** mu ruhande rw'ibumoso utangire.</p>
+        </div>
+      </section>
+
+      <section id="service-section" style="display:none;">
+        <h2 style="color:var(--accent);">Kwaka Serivisi z'Umuryango</h2>
+        <div class="card">
+          <div id="serviceAlert" class="alert success" style="display:none;"></div>
+
+          <form id="serviceRequestForm">
+            <div class="form-group">
+              <label for="serviceType">Ubwoko bwa Serivisi Ukeneye *</label>
+              <select id="serviceType" required>
+                <option value="">Hitamo Serivisi</option>
+                <option value="Ubufasha/Gufashwa">Ubufasha mu Bwishingizi, Ubuzima (Gufashwa)</option>
+                <option value="Kuganirizwa/Gusengerwa">Kuganirizwa/Gusengerwa (Ibibazo by'Imibanire, Kwizera)</option>
+                <option value="Kuyobora Amateraniro">Gusaba Kuyobora Amateraniro cyangwa Icyigisho</option>
+                <option value="Gukora umurimo w'Ivugabutumwa">Gusaba Kwemererwa Kubwiriza cyangwa Gukoresha Media</option>
+                <option value="Inyandiko y'Ubumenyi">Inyandiko y'Ubumenyi (Recommendation Letter)</option>
+                <option value="Gusaba Inkunga mu Bukwe">Gusaba Inkunga mu Bukwe</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="serviceDetails">Sobanura Serivisi Ukeneye (byibuze amagambo 10) *</label>
+              <textarea id="serviceDetails" rows="5" placeholder="Sobanura neza impamvu usaba, waba usaba gufashwa, cyangwa waba usaba gukora umurimo." required></textarea>
+            </div>
+            <button class="primary" type="submit" id="btnServiceRequest">Ohereza Icyifuzo</button>
+          </form>
+        </div>
+      </section>
+
+      <section id="profile-section" style="display:none;">
+        <h2 style="color:var(--accent);">Guhindura Imyirondoro</h2>
+        <div class="card">
+            <div id="profileAlert" class="alert error" style="display:none;"></div>
+            
+            <div class="form-group" style="text-align: center; margin-bottom: 30px;">
+                <label for="profileImageInput" style="font-weight: 700; cursor: pointer; color: var(--accent-2);">
+                    <img id="currentProfilePhoto" src="https://via.placeholder.com/110?text=CEP" class="profile-img" style="border: 2px dashed var(--muted);" alt="Shyiraho Ifoto">
+                    <p style="margin-top: 10px;">Kanda hano ushyireho Ifoto (JPEG/PNG)</p>
+                </label>
+                <input id="profileImageInput" type="file" accept="image/*" style="display: none;" />
+            </div>
+            <form id="updateProfileForm">
+                <div class="form-group">
+                    <label for="updateFullName">Izina Ryombi</label>
+                    <input id="updateFullName" type="text" placeholder="Andika Izina Ryombi">
+                </div>
+                <div class="form-group">
+                    <label for="updateChurch">Paruwase ya ADEPR Ubarizwamo</label>
+                    <input id="updateChurch" type="text" placeholder="Urugero: ADEPR Paruwase ya Kacyiru">
+                </div>
+                <div class="form-group">
+                    <label for="updatePhone">Telefoni (Phone)</label>
+                    <input id="updatePhone" type="text" placeholder="Urugero: 078xxxxxxx">
+                </div>
+                <button class="primary" type="submit">Kwandika Imyirondoro</button>
+            </form>
+        </div>
+      </section>
+      
+      <section id="documents-section" style="display:none;">
+        <h2 style="color:var(--accent);">Inyandiko z'Umuryango</h2>
+        <div class="card">
+          <p style="color:var(--muted);">Hano ni ho uzajya ubonera inyandiko zawe zose zemejwe (Ex: Inyandiko y'Ubumenyi, Inyemezabwishyu).</p>
+        </div>
+      </section>
+
+    </div>
+  </div>
+
+<script type="module">
+    // Supabase client yagizwe Global hejuru (window.supabase)
+    const supabase = window.supabase;
+    
+    // Elements zo mu Gice cya HTML
+    const sections = {
+        'home': document.getElementById('home-section'),
+        'profile': document.getElementById('profile-section'),
+        'service': document.getElementById('service-section'),
+        'documents': document.getElementById('documents-section')
+    };
+    const navLinks = document.querySelectorAll('.nav-link[data-section]');
+    const serviceAlert = document.getElementById('serviceAlert');
+    const profileAlert = document.getElementById('profileAlert');
+    const profileImageInput = document.getElementById('profileImageInput');
+    const updateProfileForm = document.getElementById('updateProfileForm');
+    const serviceRequestForm = document.getElementById('serviceRequestForm');
+    
+    // Default Photo
+    const DEFAULT_PHOTO_URL = "https://via.placeholder.com/110?text=CEP";
+
+    function showAlert(el, msg, type = 'success') {
+        el.innerText = msg;
+        el.className = `alert ${type}`;
+        el.style.display = 'block';
+        setTimeout(() => el.style.display = 'none', 5000);
+    }
+
+    function showSection(sectionId) {
+        Object.keys(sections).forEach(key => {
+            sections[key].style.display = 'none';
+        });
+        if (sections[sectionId]) {
+            sections[sectionId].style.display = 'block';
+        }
+
+        navLinks.forEach(link => {
+            link.classList.remove('active');
+            if (link.getAttribute('data-section') === sectionId) {
+                link.classList.add('active');
+            }
+        });
+    }
+
+    // Navigation and Logout
+    navLinks.forEach(link => {
+        link.addEventListener('click', (e) => {
+            e.preventDefault();
+            const sectionId = e.currentTarget.getAttribute('data-section');
+            if(sectionId) showSection(sectionId);
+        });
+    });
+
+    document.getElementById('btnLogout').addEventListener('click', async (e) => {
+        e.preventDefault();
+        const { error } = await supabase.auth.signOut();
+        if (!error) {
+            window.location.href = 'login.html';
+        } else {
+            alert('Gusohoka byanze: ' + error.message);
+        }
+    });
+    
+    // Gufungura guhitamo ifoto iyo umuntu akoze ku ifoto yaho
+    document.getElementById('currentProfilePhoto').addEventListener('click', () => {
+        document.getElementById('profileImageInput').click();
+    });
+
+    // 3. Gushyiraho Ifoto (Supabase Storage)
+    profileImageInput.addEventListener('change', async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        profileAlert.style.display = 'none';
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) {
+            showAlert(profileAlert, "Ugomba kwinjira mbere yo gushyiraho ifoto.", 'error');
+            return;
+        }
+
+        const filePath = `${user.id}/${Date.now()}_profile.${file.name.split('.').pop()}`;
+        
+        // Kohereza ifoto muri Storage 'avatars' (kugomba kuba warayiremye)
+        const { error: uploadError } = await supabase.storage
+            .from('avatars')
+            .upload(filePath, file, { cacheControl: '3600', upsert: true });
+
+        if (uploadError) {
+            showAlert(profileAlert, `Kohereza ifoto byanze: ${uploadError.message}. Genzura RLS.`, 'error');
+            return;
+        }
+        
+        // Kubona URL ya Public
+        const { data: publicUrlData } = supabase.storage
+            .from('avatars')
+            .getPublicUrl(filePath);
+
+        const profile_url = publicUrlData.publicUrl;
+
+        // Kwandika URL nshya muri tabeli ya 'users'
+        const { error: updateError } = await supabase
+            .from('users')
+            .update({ profile_url: profile_url })
+            .eq('id', user.id);
+
+        if (updateError) {
+            showAlert(profileAlert, `Kwandika URL byanze: ${updateError.message}`, 'error');
+        } else {
+            showAlert(profileAlert, 'Ifoto ya Profile yashyizweho neza!', 'success');
+            document.getElementById('profilePhoto').src = profile_url;
+            document.getElementById('currentProfilePhoto').src = profile_url; 
+        }
+    });
+
+    // 4. Guhindura Imyirondoro (Update Profile)
+    updateProfileForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        profileAlert.style.display = 'none';
+
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) {
+            showAlert(profileAlert, "Ugomba kwinjira mbere yo guhindura.", 'error');
+            return;
+        }
+
+        const newFullName = document.getElementById('updateFullName').value.trim();
+        const newChurch = document.getElementById('updateChurch').value.trim();
+        const newPhone = document.getElementById('updatePhone').value.trim(); 
+
+        const updateData = {
+            full_name: newFullName,
+            church: newChurch,
+            phone: newPhone,
+        };
+        
+        // Gukora Update muri public.users
+        const { error } = await supabase
+            .from('users')
+            .update(updateData)
+            .eq('id', user.id); // Byemewe na RLS Policy (auth.uid() = id)
+
+        if (error) {
+            showAlert(profileAlert, `Guhindura byanze: ${error.message}. Genzura RLS Policies.`, 'error');
+        } else {
+            showAlert(profileAlert, 'Imyirondoro yahinduwe neza!', 'success');
+            loadUserProfile(user); // Kongera gukurura amakuru mashya
+        }
+    });
+
+    // 5. Gukurura Imyirondoro (Fetch Profile Data - Logic)
+    async function loadUserProfile(user) {
+        // Gukurura amakuru yibanze
+        const { data: memberData, error: profileError } = await supabase
+            .from('users')
+            .select('*')
+            .eq('id', user.id)
+            .maybeSingle();
+
+        // Gukurura roles zose
+        const { data: userRoleData } = await supabase
+            .from('user_roles')
+            .select('role:roles(name)')
+            .eq('user_id', user.id);
+
+        const roleNames = userRoleData ? userRoleData.map(ur => ur.role.name).join(' / ') : 'member';
+
+        if (memberData) {
+            // Gushyira amakuru muri Home Section
+            document.getElementById('memberName').innerText = memberData.full_name || 'Umunyamuryango';
+            document.getElementById('profileName').innerText = memberData.full_name || 'Umunyamuryango';
+            document.getElementById('profileEmail').innerText = memberData.email || user.email;
+            document.getElementById('profileChurch').innerText = memberData.church || 'Ntabwo yuzujwe';
+            document.getElementById('profilePhone').innerText = memberData.phone || 'Ntabwo yuzujwe';
+            document.getElementById('profileRole').innerText = roleNames; 
+
+            // Gushyiraho ifoto
+            document.getElementById('profilePhoto').src = memberData.profile_url || DEFAULT_PHOTO_URL;
+            document.getElementById('currentProfilePhoto').src = memberData.profile_url || DEFAULT_PHOTO_URL;
+
+            // Gushyira amakuru muri Profile Section kugira ngo ahindurwe
+            document.getElementById('updateFullName').value = memberData.full_name || '';
+            document.getElementById('updateChurch').value = memberData.church || '';
+            document.getElementById('updatePhone').value = memberData.phone || '';
+        } else if (profileError) {
+             console.error("Gukurura imyirondoro byanze:", profileError.message);
+        }
+    }
+
+    // 6. Gusaba Serivisi (Service Request Logic)
+    serviceRequestForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const btn = document.getElementById('btnServiceRequest');
+        btn.disabled = true;
+        btn.innerText = 'Birimo Koherezwa...';
+        serviceAlert.style.display = 'none';
+
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return; // Byakabaye byaragiyemo kuri login.html
+
+        const type = document.getElementById('serviceType').value;
+        const details = document.getElementById('serviceDetails').value.trim();
+
+        if (!type || details.length < 10) {
+             showAlert(serviceAlert, "Hitamo ubwoko bwa serivisi, kandi usobanure neza (byibuze amagambo 10).", 'error');
+             btn.disabled = false;
+             btn.innerText = 'Ohereza Icyifuzo';
+             return;
+        }
+
+        // Tanga Serivisi muri Supabase 'service_requests' table
+        const { error } = await supabase
+            .from('service_requests') 
+            .insert({
+                user_id: user.id,
+                service_type: type,
+                details: details,
+                status: 'pending' 
+            });
+
+        if (error) {
+            showAlert(serviceAlert, 'Kwaka serivisi byanze: ' + error.message, 'error');
+        } else {
+            showAlert(serviceAlert, 'Icyifuzo cyoherejwe neza! Admin yabibonye kandi azagikurikirana.', 'success');
+            serviceRequestForm.reset();
+        }
+        btn.disabled = false;
+        btn.innerText = 'Ohereza Icyifuzo';
+    });
+
+
+    // 7. Check Session & Initialize
+    (async function initializeDashboard() {
+        const { data: { session } } = await supabase.auth.getSession();
+
+        if (!session?.user) {
+            window.location.href = 'login.html'; // Garuka kuri login
+            return;
+        }
+
+        await loadUserProfile(session.user);
+        showSection('home');
+    })();
+
+</script>
+</body>
+</html>
