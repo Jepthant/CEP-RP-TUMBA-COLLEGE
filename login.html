@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="rw">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Login | CEP RP Tumba College</title>
+
+  <style>
+    :root{
+      --bg:#f4f7fb;
+      --card:#ffffff;
+      --accent:#002147;
+      --accent-2:#1f6feb;
+      --gold:#ffd700;
+      --muted:#667085;
+      --success:#16a085;
+      --danger:#e74c3c;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      background:var(--bg);
+      font-family:Inter, "Segoe UI", Roboto, Arial, sans-serif;
+      color:#0f1724;
+      -webkit-font-smoothing:antialiased;
+      -moz-osx-font-smoothing:grayscale;
+    }
+
+    .wrap{
+      min-height:100vh;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:24px;
+    }
+
+    .card{
+      width:100%;
+      max-width:980px;
+      background:var(--card);
+      border-radius:12px;
+      box-shadow:0 8px 30px rgba(15,23,36,0.08);
+      display:grid;
+      grid-template-columns: 1fr 420px;
+      overflow:hidden;
+    }
+
+    /* left visual area */
+    .visual{
+      padding:36px;
+      background:linear-gradient(180deg,var(--accent),#003b73);
+      color:white;
+      display:flex;
+      flex-direction:column;
+      justify-content:center;
+      gap:20px;
+    }
+    .visual h1{ margin:0; font-size:1.6rem; letter-spacing:0.2px; }
+    .visual p{ margin:0; color:rgba(255,255,255,0.9); line-height:1.5 }
+    .visual .hero-img{
+      margin-top:18px;
+      width:100%;
+      height:160px;
+      background: url('1.jpg') center/cover no-repeat;
+      border-radius:8px;
+      opacity:0.95;
+      box-shadow: 0 6px 20px rgba(2,6,23,0.3) inset;
+    }
+
+    /* form side */
+    .form-side{
+      padding:34px;
+    }
+    .brand{
+      display:flex;
+      align-items:center;
+      gap:12px;
+      margin-bottom:10px;
+    }
+    .brand .logo{
+      width:46px; height:46px; border-radius:8px;
+      background:linear-gradient(180deg,var(--gold), #f0c200);
+      display:flex; align-items:center; justify-content:center;
+      font-weight:700; color:var(--accent);
+    }
+    .brand h2{ margin:0; font-size:1.1rem; color:var(--accent); }
+
+    .lead{ color:var(--muted); margin:8px 0 20px; font-size:0.95rem; }
+
+    form { display:flex; flex-direction:column; gap:12px; }
+
+    label { font-size:0.85rem; color:#101828; margin-bottom:6px; }
+    input[type="email"], input[type="password"]{
+      width:100%;
+      padding:12px 14px;
+      border-radius:8px;
+      border:1px solid #e6eef8;
+      background:#fff;
+      font-size:1rem;
+      outline:none;
+      transition:box-shadow .15s, border-color .15s;
+    }
+    input:focus { box-shadow:0 6px 20px rgba(31,111,235,0.08); border-color:var(--accent-2); }
+
+    .row { display:flex; gap:12px; align-items:center; justify-content:space-between; margin-top:4px; }
+    .remember { display:flex; gap:8px; align-items:center; color:var(--muted); font-size:0.9rem; }
+    .link { color:var(--accent-2); text-decoration:none; font-weight:600; font-size:0.95rem; }
+
+    button.primary{
+      margin-top:6px;
+      padding:12px 14px;
+      border-radius:10px;
+      border:none;
+      background:var(--accent-2);
+      color:white;
+      font-weight:700;
+      cursor:pointer;
+      box-shadow:0 8px 20px rgba(31,111,235,0.14);
+      transition:transform .12s ease, box-shadow .12s ease;
+    }
+    button.primary:active{ transform:translateY(1px) }
+    .alt { background:transparent; border:1px solid #e6eef8; color:var(--accent); padding:10px 12px; border-radius:8px; cursor:pointer; }
+
+    .footer-text{ margin-top:12px; color:var(--muted); font-size:0.9rem; }
+
+    .alert {
+      padding:10px 12px;
+      border-radius:8px;
+      font-weight:600;
+      display:none;
+    }
+    .alert.error{ background:rgba(231,76,60,0.08); color:var(--danger); border:1px solid rgba(231,76,60,0.12); display:block; }
+    .alert.success{ background:rgba(22,160,133,0.06); color:var(--success); border:1px solid rgba(22,160,133,0.12); display:block; }
+
+    @media (max-width:900px){
+      .card{ grid-template-columns:1fr; }
+      .visual{ display:none; }
+      .form-side{ padding:20px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="card" role="application" aria-label="CEP login">
+      <div class="visual" aria-hidden="true">
+        <h1>CEP RP Tumba College</h1>
+        <p>Injira muri konti yawe kugirango ubashe kugenzura gahunda, gutanga service approvals, no kubona amakuru yose y'ihuriro.</p>
+        <div class="hero-img" title="CEP activities background"></div>
+      </div>
+
+      <div class="form-side">
+        <div class="brand">
+          <div class="logo">CEP</div>
+          <h2>Sign in to CEP Dashboard</h2>
+        </div>
+
+        <p class="lead">Koresha email na password yawe. Niba utaragira konti, kanda <a class="link" href="register.html">Kwiyandikisha</a>.</p>
+
+        <div id="alert" class="alert error" role="alert" style="display:none;"></div>
+        <div id="success" class="alert success" role="status" style="display:none;"></div>
+
+        <form id="loginForm" autocomplete="on" novalidate>
+          <div>
+            <label for="email">Email</label>
+            <input id="email" name="email" type="email" placeholder="name@example.com" required />
+          </div>
+
+          <div>
+            <label for="password">Password</label>
+            <input id="password" name="password" type="password" placeholder="********" required />
+          </div>
+
+          <div class="row">
+            <label class="remember"><input id="remember" type="checkbox" /> Keep me signed in</label>
+            <a id="forgot" class="link" href="#">Wibagiwe password?</a>
+          </div>
+
+          <button id="btnLogin" class="primary" type="submit">Injira</button>
+
+          <div style="display:flex;gap:10px;margin-top:12px;align-items:center;">
+            <button id="btnGoogle" type="button" class="alt">Continue with Google</button>
+            <button id="btnEmailSignup" type="button" class="alt" onclick="location.href='register.html'">Sign up</button>
+          </div>
+
+          <p class="footer-text">Byinjira nk'umuyobozi cyangwa umunyamuryango. Abayobozi bazoherezwa kuri dashboard ibugenewe hakurikije role.</p>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+
+    // <-- REPLACE THESE with your Supabase project values -->
+    const SUPABASE_URL = "https://snasuickudieijxxwonw.supabase.co";
+    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNuYXN1aWNrdWRpZWlqeHh3b253Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTkzNDY5OTMsImV4cCI6MjA3NDkyMjk5M30.i58HzvLSVO_2_675U38iaxrBQPzdtPOS0yI0HbZcof4";
+    // ----------------------------------------------------------------
+
+    const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+      auth: { persistSession: true, detectSessionInUrl: true }
+    });
+
+    const loginForm = document.getElementById('loginForm');
+    const alertEl = document.getElementById('alert');
+    const successEl = document.getElementById('success');
+    const btnLogin = document.getElementById('btnLogin');
+    const forgotLink = document.getElementById('forgot');
+    const btnGoogle = document.getElementById('btnGoogle');
+
+    function showError(msg){
+      successEl.style.display = 'none';
+      alertEl.innerText = msg;
+      alertEl.style.display = 'block';
+    }
+    function showSuccess(msg){
+      alertEl.style.display = 'none';
+      successEl.innerText = msg;
+      successEl.style.display = 'block';
+    }
+
+    // Map role -> dashboard page
+    const roleRedirect = {
+      president: 'president.html',
+      vice_president: 'dashboard_vp.html',
+      accountant: 'dashboard_accountant.html',
+      media: 'dashboard_media.html',
+      secretary: 'dashboard_secretary.html',
+      advisor: 'dashboard_advisor.html',
+      member: 'dashboard_member.html'
+    };
+
+    // Helper: fetch role from users table by auth user id, fallback to email
+    async function fetchUserRole(authUser) {
+      if (!authUser) return null;
+      // try by id first
+      let { data, error } = await supabase
+        .from('users')
+        .select('role')
+        .eq('id', authUser.id)
+        .maybeSingle();
+
+      if (error) {
+        console.warn('Error fetching role by id:', error.message);
+      }
+      if (data && data.role) return data.role;
+
+      // fallback: try by email
+      const email = authUser.email;
+      if (email) {
+        const { data: byEmail, error: e2 } = await supabase
+          .from('users')
+          .select('role')
+          .eq('email', email)
+          .maybeSingle();
+
+        if (e2) console.warn('Error fetching role by email:', e2.message);
+        if (byEmail && byEmail.role) return byEmail.role;
+      }
+      return null;
+    }
+
+    // Sign in with email/password
+    loginForm.addEventListener('submit', async (ev) => {
+      ev.preventDefault();
+      alertEl.style.display = 'none';
+      successEl.style.display = 'none';
+
+      const email = document.getElementById('email').value.trim();
+      const password = document.getElementById('password').value;
+
+      if (!email || !password) {
+        showError('Email na password birakenewe.');
+        return;
+      }
+
+      btnLogin.disabled = true;
+      btnLogin.innerText = 'Birimo...';
+
+      try {
+        const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+        if (error) {
+          showError('Login failed: ' + error.message);
+          btnLogin.disabled = false;
+          btnLogin.innerText = 'Injira';
+          return;
+        }
+
+        const user = data.user;
+        if (!user) {
+          showError('Ntushobora kwinjira: nta user yagaragaye.');
+          btnLogin.disabled = false;
+          btnLogin.innerText = 'Injira';
+          return;
+        }
+
+        // fetch role
+        const role = await fetchUserRole(user);
+
+        // if no role found, set as member by default
+        const resolvedRole = role || 'member';
+
+        showSuccess('Murakaza neza! Uri kwinjira nka ' + resolvedRole);
+
+        // short delay then redirect
+        setTimeout(() => {
+          const dest = roleRedirect[resolvedRole] || 'dashboard_member.html';
+          window.location.href = dest;
+        }, 900);
+
+      } catch (err) {
+        console.error(err);
+        showError('Habaye ikibazo utazi: ' + (err.message || err));
+      } finally {
+        btnLogin.disabled = false;
+        btnLogin.innerText = 'Injira';
+      }
+    });
+
+    // Forgot password flow: send reset link
+    forgotLink.addEventListener('click', async (e) => {
+      e.preventDefault();
+      alertEl.style.display = 'none';
+      successEl.style.display = 'none';
+
+      const email = document.getElementById('email').value.trim();
+      if (!email) {
+        showError('Andika email yawe hejuru kugira ngo wohereze reset link.');
+        return;
+      }
+      try {
+        const { data, error } = await supabase.auth.resetPasswordForEmail(email, {
+          redirectTo: window.location.origin + '/reset-password.html' // optional: page to handle reset
+        });
+        if (error) {
+          showError('Error: ' + error.message);
+        } else {
+          showSuccess('Twatumije email yo gusubiza password. Reba inbox yawe.');
+        }
+      } catch (err) {
+        console.error(err);
+        showError('Habaye ikibazo: ' + (err.message || err));
+      }
+    });
+
+    // Optional: Google OAuth sign-in
+    btnGoogle.addEventListener('click', async () => {
+      try {
+        const { error } = await supabase.auth.signInWithOAuth({
+          provider: 'google',
+          options: { redirectTo: window.location.origin + '/oauth-callback.html' }
+        });
+        if (error) showError(error.message);
+      } catch (err) {
+        console.error(err);
+        showError('OAuth error: ' + (err.message || err));
+      }
+    });
+
+    // If already logged in (session), detect and redirect
+    (async function checkSession() {
+      const { data } = await supabase.auth.getSession();
+      const session = data?.session;
+      if (session?.user) {
+        const role = await fetchUserRole(session.user);
+        const dest = roleRedirect[role] || 'dashboard_member.html';
+        // small timeout to show message quickly
+        showSuccess('Session yabonetse, uri kwerekeza kuri dashboard...');
+        setTimeout(()=> window.location.href = dest, 700);
+      }
+    })();
+
+  </script>
+</body>
+</html>
