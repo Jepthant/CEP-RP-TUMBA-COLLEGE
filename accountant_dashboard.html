@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html lang="rw">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Accountant Dashboard - Imari Digital | CEP RP Tumba</title>
+
+    <style>
+        :root{
+            --bg:#f8f9fa; 
+            --card:#ffffff;
+            --accent:#002147; /* CEP Blue (Primary) */
+            --accent-2:#1f6feb;
+            --gold:#ffd700;
+            --muted:#6c757d;
+            --success:#2ecc71; /* Emerald Green for Finance */
+            --danger:#dc3545; 
+            --finance-primary:#2ecc71; /* Emerald Green for Finance */
+            --finance-light: #27ae60; 
+            --shadow-light: 0 0.5rem 1rem rgba(0, 0, 0, 0.05);
+            --shadow-medium: 0 1rem 3rem rgba(0, 0, 0, 0.1);
+        }
+        *{box-sizing:border-box}
+        body{
+            margin:0;
+            background:var(--bg);
+            font-family:Inter, "Segoe UI", Roboto, Arial, sans-serif;
+            color:#0f1724;
+            -webkit-font-smoothing:antialiased;
+            -moz-osx-font-smoothing:grayscale;
+        }
+
+        /* -------------------- Layout & Sidebar -------------------- */
+        .dashboard-container { display: flex; min-height: 100vh; }
+        .sidebar { width: 280px; background: var(--accent); color: #ffffff; padding: 30px 20px; box-shadow: var(--shadow-medium); position: sticky; top: 0; height: 100vh; }
+        .sidebar h2 { font-size: 1.6rem; text-align: center; margin-bottom: 50px; color: var(--gold); }
+        .sidebar a { display: block; color: #ffffff; text-decoration: none; padding: 12px 15px; margin-bottom: 5px; border-radius: 8px; transition: background 0.3s, padding 0.3s; }
+        .sidebar a:hover { background: rgba(255, 255, 255, 0.1); padding-left: 20px; }
+        .main-content { flex-grow: 1; padding: 40px; }
+        .main-content h1 { color: var(--accent); margin-bottom: 10px; font-size: 2.2rem; }
+        .role-subtitle { color: var(--finance-primary); font-size: 1.1rem; margin-bottom: 40px; font-weight: 700; border-bottom: 3px solid var(--finance-primary); padding-bottom: 5px; display: inline-block; }
+
+        /* -------------------- Action & Metrics Cards -------------------- */
+        .action-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 30px; margin-bottom: 40px; }
+        .card { background: var(--card); border-radius: 12px; padding: 25px; box-shadow: var(--shadow-light); border-left: 5px solid transparent; transition: all 0.3s; }
+        .card:hover { box-shadow: var(--shadow-medium); transform: translateY(-3px); }
+        .card h3 { margin: 0 0 10px 0; font-size: 1rem; color: var(--muted); font-weight: 600; text-transform: uppercase; }
+        .card p { font-size: 2.5rem; font-weight: 800; margin: 0; }
+
+        .btn-action { background: var(--finance-primary); color: white; border: none; padding: 12px 25px; border-radius: 8px; font-size: 1.05rem; font-weight: 700; cursor: pointer; transition: background 0.2s; width: 100%; margin-top: 15px; }
+        .btn-action:hover { background: var(--finance-light); }
+        
+        /* Card Colors */
+        .card.pending-presidency { border-left-color: var(--finance-primary); }
+        .card.pending-presidency p { color: var(--finance-primary); } 
+        .card.approved-count { border-left-color: var(--success); }
+        .card.approved-count p { color: var(--success); }
+        .card.total-submitted { border-left-color: var(--warning); }
+        .card.total-submitted p { color: var(--warning); }
+        
+        /* -------------------- Report History Table -------------------- */
+        .history-section { margin-top: 50px; }
+        .section-title { color: var(--accent); margin-top: 30px; margin-bottom: 20px; font-size: 1.8rem; border-bottom: 1px solid #ddd; padding-bottom: 10px; }
+        .data-table { width: 100%; border-collapse: collapse; background: var(--card); border-radius: 8px; overflow: hidden; box-shadow: var(--shadow-light); }
+        .data-table th, .data-table td { padding: 15px 20px; text-align: left; border-bottom: 1px solid #eee; font-size: 0.95rem; }
+        .data-table th { background: var(--finance-primary); color: #ffffff; font-weight: 700; text-transform: uppercase; font-size: 0.9rem; }
+        .data-table tr:hover { background: #f0fff0; }
+        
+        .status-badge { padding: 6px 12px; border-radius: 20px; font-size: 0.85rem; font-weight: 700; display: inline-block; }
+        .status-Pending-Presidency { background-color: var(--finance-light); color: #fff; } 
+        .status-Approved { background-color: var(--success); color: #fff; }
+        .status-Rejected { background-color: var(--danger); color: #fff; }
+
+        /* -------------------- MODAL & FORM STYLING (Digital Form) -------------------- */
+        .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.4); }
+        .modal-content { background-color: var(--card); margin: 3% auto; padding: 30px; border-radius: 12px; width: 90%; max-width: 900px; box-shadow: var(--shadow-medium); animation: fadeIn 0.5s; }
+        .modal-content h2 { color: var(--finance-primary); border-bottom: 2px solid var(--finance-light); padding-bottom: 10px; margin-bottom: 5px; }
+        
+        .form-group { margin-bottom: 20px; }
+        .form-group label { display: block; margin-bottom: 8px; font-weight: 600; color: var(--accent); }
+        .form-group input[type="text"], .form-group input[type="number"], .form-group textarea, .form-group select {
+            width: 100%; padding: 12px; border: 1px solid #ced4da; border-radius: 6px; font-size: 1rem;
+        }
+        .form-group input:focus, .form-group textarea:focus, .form-group select:focus {
+            border-color: var(--finance-primary); 
+            box-shadow: 0 0 0 0.2rem rgba(46, 204, 113, 0.25); 
+            outline: none;
+        }
+        
+        .form-flex { display: flex; gap: 20px; }
+        .form-flex > .form-group { flex: 1; }
+        
+        /* Financial Details Section (Table-like Structure) */
+        .finance-details-grid {
+             display: grid;
+             grid-template-columns: 1fr 1fr;
+             gap: 20px;
+             margin-top: 15px;
+        }
+        .finance-details-box {
+             border: 1px solid #ddd;
+             padding: 20px;
+             border-radius: 8px;
+        }
+        .income-box { border-left: 5px solid var(--success); background: #e8f8f2; }
+        .expense-box { border-left: 5px solid var(--danger); background: #fdf0f0; }
+        
+        .finance-details-box h4 { margin-top: 0; color: var(--accent); }
+        .finance-details-box label { font-size: 0.95rem; }
+        
+        /* Dynamic Input Row */
+        .input-row { display: flex; gap: 10px; margin-bottom: 10px; align-items: center; }
+        .input-row input[type="text"] { width: 60%; }
+        .input-row input[type="number"] { width: 30%; text-align: right; }
+        .input-row button { width: 10%; background: var(--danger); color: white; border: none; padding: 8px 0; border-radius: 4px; cursor: pointer; }
+        
+        .btn-add-item { background: var(--accent-2); color: white; padding: 8px; border-radius: 4px; width: 100%; margin-top: 10px; cursor: pointer; }
+        
+        /* Summary/Total Area */
+        .summary-row {
+             display: flex; justify-content: space-between; align-items: center;
+             padding: 15px 20px; border-radius: 8px; font-weight: 700; margin-top: 20px;
+        }
+        .income-total-row { background: var(--success); color: white; }
+        .expense-total-row { background: var(--danger); color: white; }
+        .balance-row { background: var(--media-light); color: var(--accent); font-size: 1.2rem; border: 2px solid var(--finance-primary); }
+        
+        /* Hidden Input for Final Balance */
+        #final-total-income, #final-total-expense, #final-balance {
+             display: none; /* Kugira ngo zoherezwe gusa muri Supabase */
+        }
+
+        .submit-button { width: 100%; background: var(--finance-primary); color: white; border: none; padding: 15px; border-radius: 6px; font-size: 1.1rem; font-weight: 700; cursor: pointer; transition: background 0.2s; margin-top: 20px; }
+        .submit-button:hover { background: var(--finance-light); }
+        
+        .message-area { margin-top: 15px; padding: 10px; border-radius: 5px; text-align: center; font-weight: 600; }
+        .message-success { background-color: #d4edda; color: var(--success); }
+        .message-error { background-color: #f8d7da; color: var(--danger); }
+
+        @media (max-width: 768px) {
+             .form-flex { flex-direction: column; }
+             .finance-details-grid { grid-template-columns: 1fr; }
+             .sidebar { width: 100%; height: auto; position: static; padding: 20px; }
+             .main-content { padding: 20px; }
+             .action-cards { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <script type="module">
+        import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+        
+        // SHYIRAMO URL NA KEY YAWE NYAYO HANO
+        const SUPABASE_URL = "https://snasuickudieijxxwonw.supabase.co"; 
+        const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNuYXN1aWNrdWRpZWlqeHh3b253Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTkzNDY5OTMsImV4cCI6MjA3NDkyMjk5M30.i58HzvLSVO_2_675U38iaxrBQPzdtPOS0yI0HbZcof4"; 
+        window.supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, { auth: { persistSession: true, detectSessionInUrl: false } });
+
+        // -------------------- MODAL FUNCTIONS --------------------
+
+        window.openModal = (modalId) => {
+            document.getElementById(modalId).style.display = 'block';
+            document.getElementById('submissionMessage').textContent = '';
+            document.getElementById('submissionMessage').className = 'message-area';
+        };
+
+        window.closeModal = (modalId) => {
+            document.getElementById(modalId).style.display = 'none';
+        };
+
+        // -------------------- FINANCE CALCULATION LOGIC --------------------
+
+        function formatCurrency(amount) {
+            return new Intl.NumberFormat('en-RW', { style: 'currency', currency: 'RWF', minimumFractionDigits: 0 }).format(amount);
+        }
+
+        function calculateTotals() {
+            let totalIncome = 0;
+            let totalExpense = 0;
+
+            // Baza Income Totals
+            document.querySelectorAll('#income-items-container .item-amount').forEach(input => {
+                totalIncome += parseFloat(input.value) || 0;
+            });
+
+            // Baza Expense Totals
+            document.querySelectorAll('#expense-items-container .item-amount').forEach(input => {
+                totalExpense += parseFloat(input.value) || 0;
+            });
+
+            const balance = totalIncome - totalExpense;
+
+            // Update Display
+            document.getElementById('income-total-display').textContent = formatCurrency(totalIncome);
+            document.getElementById('expense-total-display').textContent = formatCurrency(totalExpense);
+            document.getElementById('balance-display').textContent = formatCurrency(balance);
+            
+            // Update Hidden Inputs (To be sent to Supabase)
+            document.getElementById('final-total-income').value = totalIncome;
+            document.getElementById('final-total-expense').value = totalExpense;
+            document.getElementById('final-balance').value = balance;
+        }
+
+        function addItemRow(containerId, isIncome) {
+            const container = document.getElementById(containerId);
+            const row = document.createElement('div');
+            row.className = 'input-row';
+            
+            const titleInput = document.createElement('input');
+            titleInput.type = 'text';
+            titleInput.placeholder = isIncome ? 'Inkomoko y\'Amafaranga' : 'Igikorwa Amafaranga Yagiyeho';
+            titleInput.className = 'item-title';
+            
+            const amountInput = document.createElement('input');
+            amountInput.type = 'number';
+            amountInput.placeholder = '0';
+            amountInput.min = '0';
+            amountInput.className = 'item-amount';
+            amountInput.oninput = calculateTotals; // Automatic calculation on input
+
+            const deleteButton = document.createElement('button');
+            deleteButton.type = 'button';
+            deleteButton.textContent = 'X';
+            deleteButton.onclick = () => {
+                container.removeChild(row);
+                calculateTotals(); 
+            };
+            
+            row.appendChild(titleInput);
+            row.appendChild(amountInput);
+            row.appendChild(deleteButton);
+            container.appendChild(row);
+            
+            // Set initial focus
+            titleInput.focus();
+        }
+        
+        // -------------------- MAIN DATA FETCHING --------------------
+
+        async function fetchFinanceData() {
+            try {
+                // Fetch reports zose za Finance
+                const { data: reports, count, error } = await supabase
+                    .from('finance_reports') 
+                    .select('*', { count: 'exact' })
+                    .order('submission_date', { ascending: false });
+
+                if (error) throw error;
+                
+                // Metrics: Pending, Approved, Total
+                const pending = reports.filter(r => r.status === 'Pending Presidency').length;
+                const approved = reports.filter(r => r.status === 'Approved').length;
+
+                document.getElementById('pending-count').textContent = pending;
+                document.getElementById('approved-count').textContent = approved;
+                document.getElementById('total-reports-count').textContent = count;
+                
+                // Kwerekana Table y'a Reports
+                renderReportsTable(reports);
+
+            } catch (error) {
+                console.error('Error fetching finance data:', error.message);
+            }
+        }
+        
+        // -------------------- TABLE RENDERING --------------------
+
+        function renderReportsTable(reports) {
+            const tableBody = document.getElementById('finance-reports-body');
+            tableBody.innerHTML = '';
+            
+            if (reports.length === 0) {
+                 tableBody.innerHTML = '<tr><td colspan="5" style="text-align:center; color:var(--muted); padding:20px;">Nta Raporo z\'Imari zihari ubu.</td></tr>';
+                 return;
+            }
+            
+            reports.forEach(report => {
+                const statusClass = report.status.replace(/\s/g, '-');
+                
+                const row = tableBody.insertRow();
+                row.innerHTML = `
+                    <td>${new Date(report.submission_date).toLocaleDateString()}</td>
+                    <td><strong>${report.report_title}</strong> (${report.report_type})</td>
+                    <td style="color:var(--success); font-weight:700;">${formatCurrency(report.total_income || 0)}</td>
+                    <td style="color:var(--danger); font-weight:700;">${formatCurrency(report.total_expense || 0)}</td>
+                    <td><span class="status-badge status-${statusClass}">${report.status}</span></td>
+                `;
+            });
+        }
+        
+        // -------------------- SUBMISSION LOGIC --------------------
+        
+        // Guhindura Dynamic Inputs mo String ya JSON kugira ngo yoherezwe muri Supabase
+        function getDynamicItems(containerId) {
+             const items = [];
+             document.querySelectorAll(`#${containerId} .input-row`).forEach(row => {
+                 const title = row.querySelector('.item-title').value.trim();
+                 const amount = parseFloat(row.querySelector('.item-amount').value) || 0;
+                 if (title && amount > 0) {
+                      items.push({ title, amount });
+                 }
+             });
+             return JSON.stringify(items);
+        }
+
+        async function handleReportSubmission(e) {
+            e.preventDefault();
+            
+            const form = e.target;
+            const messageArea = document.getElementById('submissionMessage');
+            messageArea.textContent = 'Gutegura no Kohereza Raporo...';
+            messageArea.className = 'message-area';
+            
+            // Kura Data zose muri Form, harimo n'a Calculations zikoresha hidden inputs
+            const submissionData = {
+                advisor_role: 'finance',
+                report_title: form['report-title'].value,
+                report_type: form['report-type'].value,
+                reporting_period: form['reporting-period'].value,
+                commentary: form['commentary'].value,
+                
+                // Details (JSON String)
+                income_details: getDynamicItems('income-items-container'), 
+                expense_details: getDynamicItems('expense-items-container'), 
+                
+                // Totals (from automatic calculation)
+                total_income: parseFloat(form['final-total-income'].value) || 0,
+                total_expense: parseFloat(form['final-total-expense'].value) || 0,
+                final_balance: parseFloat(form['final-balance'].value) || 0,
+
+                status: 'Pending Presidency', 
+            };
+            
+            // Kureba ko Title n'a Details ziriho
+            if (!submissionData.report_title || submissionData.total_income === 0 && submissionData.total_expense === 0) {
+                 messageArea.textContent = 'Bitegetswe kuzuza Umutwe wa Raporo ndetse n\'a Details z\'Imari!';
+                 messageArea.className = 'message-area message-error';
+                 return;
+            }
+
+            try {
+                 // Gukora Submission Muri Database
+                 const { error } = await supabase
+                     .from('finance_reports')
+                     .insert([submissionData]);
+
+                 if (error) throw error;
+
+                 messageArea.textContent = `Byakunze! Raporo yoherejwe kuri Presidency ngo ikore Approval.`;
+                 messageArea.className = 'message-area message-success';
+                 form.reset();
+                 document.getElementById('income-items-container').innerHTML = ''; // Clear dynamic inputs
+                 document.getElementById('expense-items-container').innerHTML = ''; // Clear dynamic inputs
+                 calculateTotals(); // Reset totals display
+                 
+                 setTimeout(() => {
+                     closeModal('reportModal');
+                     fetchFinanceData(); 
+                 }, 3000);
+            } catch (error) {
+                 messageArea.textContent = `Kohereza byanze: ` + error.message;
+                 messageArea.className = 'message-area message-error';
+                 console.error('Submission Error:', error);
+            }
+        }
+        
+        document.addEventListener('DOMContentLoaded', () => {
+             document.getElementById('financeReportForm').addEventListener('submit', handleReportSubmission);
+             document.getElementById('add-income').onclick = () => addItemRow('income-items-container', true);
+             document.getElementById('add-expense').onclick = () => addItemRow('expense-items-container', false);
+             // Initial calculation setup
+             calculateTotals(); 
+        });
+
+
+        // Initialize on load
+        document.addEventListener('DOMContentLoaded', fetchFinanceData);
+    </script>
+
+
+    <div class="dashboard-container">
+        <div class="sidebar">
+            <h2>CEP Advisor</h2>
+            <p style="color:var(--gold); font-size:1.1rem; font-weight:700; margin-bottom: 20px;">Umuhuzabikorwa w'Imari</p>
+            <a href="#">Dashboard Yanjye</a>
+            <a href="#">Raporo Zanjye (History)</a>
+            <a href="#">Amategeko y'Imari</a>
+            <a href="#">Logout</a>
+        </div>
+
+        <div class="main-content">
+            <h1>Dashibodi y'Umuhuzabikorwa w'Imari (Accountant)</h1>
+            <p class="role-subtitle">Inshingano: Gutegura no Gutanga Raporo z'Imari kuri Presidency.</p>
+            
+            <div class="action-cards">
+                <div class="card card-action" style="border-left-color: var(--finance-primary);">
+                    <h3>Gutanga Raporo Y'Imari</h3>
+                    <p>Andika Raporo nshya y'Ibivuye mu Imari n'a Budget.</p>
+                    <button class="btn-action" onclick="openModal('reportModal')">Ohereza Raporo Nshya</button>
+                </div>
+                 <div class="card pending-presidency">
+                    <h3>Raporo Zitegereje Kwemezwa</h3>
+                    <p id="pending-count">0</p>
+                </div>
+                <div class="card approved-count">
+                    <h3>Raporo Zemewe (Bikijwe)</h3>
+                    <p id="approved-count">0</p>
+                </div>
+                <div class="card total-submitted">
+                    <h3>Total Raporo Zose</h3>
+                    <p id="total-reports-count">0</p>
+                </div>
+            </div>
+
+            <div class="history-section">
+                 <h2 class="section-title">Amateka ya Raporo z'Imari Nshya</h2>
+                 <p style="color:var(--muted);">Raporo zemewe na Presidency zibaye **Report Yabayeho** (Historical Record).</p>
+                 <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th style="width:15%;">Itariki</th>
+                            <th style="width:30%;">Umutwe wa Raporo & Ubwoko</th>
+                            <th style="width:20%;">Amafaranga Yinjiye</th>
+                            <th style="width:20%;">Amafaranga Yasohotse</th>
+                            <th style="width:15%;">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="finance-reports-body">
+                        <tr><td colspan="5" style="text-align:center; color:var(--muted);">Gutegereza Data...</td></tr>
+                    </tbody>
+                 </table>
+            </div>
+        </div>
+    </div>
+    
+    <div id="reportModal" class="modal">
+        <div class="modal-content">
+            <span class="close-button" onclick="closeModal('reportModal')">&times;</span>
+            <h2>Raporo Nshya y'Imari (Financial Report)</h2>
+            <p class="modal-subtitle" style="color:var(--finance-light); font-weight: 600;">Koresha Calculator Yikora yo hasi kugira ngo umenye Balance mbere yo kohereza.</p>
+
+            <form id="financeReportForm">
+                <div class="form-flex">
+                    <div class="form-group">
+                        <label for="report-title">Umutwe wa Raporo:</label>
+                        <input type="text" id="report-title" name="report-title" placeholder="Urugero: Raporo y'Imari yo mu Kwezi kwa Kanama" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="report-type">Ubwoko bwa Raporo:</label>
+                        <select id="report-type" name="report-type" required>
+                            <option value="Monthly">Burya Kwezi (Monthly)</option>
+                            <option value="Quarterly">Burya Gihembwe (Quarterly)</option>
+                            <option value="Annual">Burya Mwaka (Annual)</option>
+                            <option value="Budget">Budget Proposal</option>
+                        </select>
+                    </div>
+                     <div class="form-group">
+                        <label for="reporting-period">Igihe Raporo Igaragaza:</label>
+                        <input type="text" id="reporting-period" name="reporting-period" placeholder="Urugero: August 2025 cyangwa Q3 2025" required>
+                    </div>
+                </div>
+                
+                <hr style="border-top: 1px dashed #ddd; margin: 30px 0;">
+
+                <div class="finance-details-grid">
+                    <div class="finance-details-box income-box">
+                        <h4>Amafaranga Yinjiye (Total Income)</h4>
+                        <div id="income-items-container">
+                            </div>
+                        <button type="button" class="btn-add-item" id="add-income">Ongeramo Inkomoko (Income Item)</button>
+                    </div>
+
+                    <div class="finance-details-box expense-box">
+                        <h4>Amafaranga Yasohotse (Total Expenses)</h4>
+                        <div id="expense-items-container">
+                            </div>
+                        <button type="button" class="btn-add-item" id="add-expense" style="background: var(--danger);">Ongeramo Igikorwa (Expense Item)</button>
+                    </div>
+                </div>
+                
+                <div class="summary-row income-total-row">
+                    <span>Total Income:</span>
+                    <span id="income-total-display">RWF 0</span>
+                </div>
+                
+                <div class="summary-row expense-total-row">
+                    <span>Total Expenses:</span>
+                    <span id="expense-total-display">RWF 0</span>
+                </div>
+                
+                <div class="summary-row balance-row">
+                    <span>Balance Isigaye (Net):</span>
+                    <span id="balance-display">RWF 0</span>
+                </div>
+
+                <input type="hidden" id="final-total-income" name="final-total-income">
+                <input type="hidden" id="final-total-expense" name="final-total-expense">
+                <input type="hidden" id="final-balance" name="final-balance">
+
+
+                <div class="form-group" style="margin-top: 25px;">
+                    <label for="commentary">Ibisobanuro & Ibitekerezo (Commentary):</label>
+                    <textarea id="commentary" name="commentary" rows="3" placeholder="Sobanura neza uko Imari yakoreshejwe n'impamvu z'ingufu/ibibazo byabonetse..."></textarea>
+                </div>
+                
+                <button type="submit" class="submit-button">Ohereza Raporo Kuri Presidency (Gusaba Kwemezwa)</button>
+                <p id="submissionMessage" class="message-area"></p>
+            </form>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="rw">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Evangelism Advisor Dashboard PRO | CEP RP Tumba</title>
+
+    <style>
+        :root{
+            --bg:#f8f9fa; 
+            --card:#ffffff;
+            --accent:#002147; /* CEP Blue (Primary) */
+            --accent-2:#1f6feb;
+            --gold:#ffd700;
+            --muted:#6c757d;
+            --success:#28a745; 
+            --danger:#dc3545; 
+            --warning:#ffc107; 
+            --info:#e67e22; /* Orange/Pumpkin for Evangelism */
+            --shadow-light: 0 0.5rem 1rem rgba(0, 0, 0, 0.05);
+            --shadow-medium: 0 1rem 3rem rgba(0, 0, 0, 0.1);
+        }
+        *{box-sizing:border-box}
+        body{
+            margin:0;
+            background:var(--bg);
+            font-family:Inter, "Segoe UI", Roboto, Arial, sans-serif;
+            color:#0f1724;
+            -webkit-font-smoothing:antialiased;
+            -moz-osx-font-smoothing:grayscale;
+        }
+
+        /* -------------------- Layout & Sidebar -------------------- */
+        .dashboard-container { display: flex; min-height: 100vh; }
+        .sidebar {
+            width: 280px; 
+            background: var(--accent);
+            color: #ffffff;
+            padding: 30px 20px;
+            box-shadow: var(--shadow-medium);
+            position: sticky;
+            top: 0;
+            height: 100vh;
+        }
+        .sidebar h2 { font-size: 1.6rem; text-align: center; margin-bottom: 50px; color: var(--gold); }
+        .sidebar a {
+            display: block; color: #ffffff; text-decoration: none; padding: 12px 15px; margin-bottom: 5px;
+            border-radius: 8px; transition: background 0.3s, padding 0.3s;
+        }
+        .sidebar a:hover { background: rgba(255, 255, 255, 0.1); padding-left: 20px; }
+        .main-content { flex-grow: 1; padding: 40px; }
+        .main-content h1 { color: var(--accent); margin-bottom: 10px; font-size: 2.2rem; }
+        .role-subtitle {
+            color: var(--info); font-size: 1.1rem; margin-bottom: 40px; font-weight: 500;
+            border-bottom: 3px solid var(--info); padding-bottom: 5px; display: inline-block;
+        }
+
+        /* -------------------- Cards and Metrics -------------------- */
+        .metric-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 25px; margin-bottom: 40px; }
+        .card {
+            background: var(--card); border-radius: 12px; padding: 25px; box-shadow: var(--shadow-light);
+            border-left: 5px solid transparent; transition: all 0.3s;
+        }
+        .card:hover { box-shadow: var(--shadow-medium); transform: translateY(-5px); }
+        .card h3 { margin: 0 0 10px 0; font-size: 1rem; color: var(--muted); font-weight: 600; text-transform: uppercase; }
+        .card p { font-size: 2.5rem; font-weight: 800; margin: 0; }
+        /* Card Colors */
+        .card.pending { border-left-color: var(--info); }
+        .card.pending p { color: var(--info); } /* Orange for Pending VP1 */
+        
+        .card.approved-vp { border-left-color: var(--success); }
+        .card.approved-vp p { color: var(--success); }
+        
+        .card.published { border-left-color: var(--success); }
+        .card.published p { color: var(--success); }
+
+        /* -------------------- Table and Status -------------------- */
+        .section-title { color: var(--accent); margin-top: 30px; margin-bottom: 20px; font-size: 1.8rem; border-bottom: 1px solid #ddd; padding-bottom: 10px; }
+        .data-table { width: 100%; border-collapse: collapse; background: var(--card); border-radius: 8px; overflow: hidden; box-shadow: var(--shadow-light); }
+        .data-table th, .data-table td { padding: 15px 20px; text-align: left; border-bottom: 1px solid #eee; }
+        .data-table th { background: var(--accent-2); color: #ffffff; font-weight: 700; text-transform: uppercase; font-size: 0.9rem; }
+        .data-table tr:hover { background: #f1f2f3; }
+        
+        .status-badge { padding: 6px 12px; border-radius: 20px; font-size: 0.85rem; font-weight: 700; display: inline-block; }
+        .status-Published { background-color: var(--success); color: #fff; }
+        .status-Pending-VP1 { background-color: var(--info); color: white; } /* Orange on white text */
+        .status-Approved-VP { background-color: var(--success); color: #fff; } /* Evangelism igira Published by VP1 */
+        .status-Rejected { background-color: var(--danger); color: #fff; }
+        
+        .action-btn-view { background: var(--accent-2); color: white; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer; transition: background 0.2s; }
+        .action-btn-view:hover { background: var(--accent); }
+        
+        /* -------------------- MODAL & FORM STYLING -------------------- */
+        .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.4); }
+        .modal-content {
+            background-color: var(--card); margin: 5% auto; padding: 30px; border-radius: 12px;
+            width: 90%; max-width: 600px; box-shadow: var(--shadow-medium); animation: fadeIn 0.5s;
+        }
+        @keyframes fadeIn { from {opacity: 0; transform: translateY(-20px);} to {opacity: 1; transform: translateY(0);} }
+        .close-button { color: var(--muted); float: right; font-size: 28px; font-weight: bold; transition: color 0.2s; }
+        .close-button:hover, .close-button:focus { color: var(--danger); text-decoration: none; cursor: pointer; }
+        .modal-content h2 { color: var(--accent); border-bottom: 2px solid var(--info); padding-bottom: 10px; margin-bottom: 5px; }
+        .modal-subtitle { color: var(--muted); font-size: 0.9rem; margin-bottom: 20px; }
+
+        .form-group { margin-bottom: 20px; }
+        .form-group label { display: block; margin-bottom: 8px; font-weight: 600; color: var(--accent); }
+        .form-group input[type="text"], .form-group textarea, .form-group select {
+            width: 100%; padding: 12px; border: 1px solid #ced4da; border-radius: 6px; font-size: 1rem;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+        .form-group input:focus, .form-group textarea:focus, .form-group select:focus {
+            border-color: var(--info); /* Orange focus */
+            box-shadow: 0 0 0 0.2rem rgba(230, 126, 34, 0.25); 
+            outline: none;
+        }
+        .form-group textarea { resize: vertical; }
+        .submit-button {
+            width: 100%; background: var(--info); color: white; border: none; padding: 15px;
+            border-radius: 6px; font-size: 1.1rem; font-weight: 700; cursor: pointer; transition: background 0.2s;
+        }
+        .submit-button:hover { background: #d35400; }
+        
+        .btn-new-submission { background: var(--info); color: white; border: none; padding: 12px 25px; border-radius: 8px; font-size: 1.1rem; font-weight: 700; cursor: pointer; transition: background 0.2s; }
+        .btn-new-submission:hover { background: #d35400; }
+        .message-area { margin-top: 15px; padding: 10px; border-radius: 5px; text-align: center; font-weight: 600; }
+        .message-success { background-color: #d4edda; color: var(--success); }
+        .message-error { background-color: #f8d7da; color: var(--danger); }
+
+        @media (max-width: 992px) { /* Responsiveness */
+            .dashboard-container { flex-direction: column; }
+            .sidebar { width: 100%; height: auto; position: static; padding: 20px; }
+            .main-content { padding: 20px; }
+            .metric-cards { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <script type="module">
+        import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+        
+        // SHYIRAMO URL NA KEY YAWE NYAYO HANO
+        const SUPABASE_URL = "https://snasuickudieijxxwonw.supabase.co"; 
+        const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNuYXN1aWNrdWRpZWlqeHh3b253Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTkzNDY5OTMsImV4cCI6MjA3NDkyMjk5M30.i58HzvLSVO_2_675U38iaxrBQPzdtPOS0yI0HbZcof4"; 
+        window.supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, { auth: { persistSession: true, detectSessionInUrl: false } });
+
+        let currentAdvisorRole = 'evangelism';
+
+        // -------------------- MODAL FUNCTIONS --------------------
+
+        // Fungura Modal
+        window.openModal = () => {
+            document.getElementById('submissionModal').style.display = 'block';
+            document.getElementById('submissionForm').reset();
+            document.getElementById('submissionMessage').textContent = '';
+            document.getElementById('submissionMessage').className = 'message-area';
+        };
+
+        // Funga Modal
+        window.closeModal = () => {
+            document.getElementById('submissionModal').style.display = 'none';
+        };
+
+        // -------------------- DATA FETCHING --------------------
+
+        async function fetchEvangelismData() {
+            try {
+                // Fetch Submissions Zose za Evangelism
+                const { data: submissions, count, error } = await supabase
+                    .from('submissions')
+                    .select('*', { count: 'exact' })
+                    .eq('advisor_role', currentAdvisorRole)
+                    .order('submission_date', { ascending: false });
+
+                if (error) throw error;
+                
+                // Kubara Imibare y'Ingenzi (Metrics)
+                const pendingVP1 = submissions.filter(s => s.status === 'Pending VP1').length;
+                const published = submissions.filter(s => s.status === 'Published').length; // Evangelism ihita ijya muri Published
+                const rejected = submissions.filter(s => s.status === 'Rejected').length; 
+
+                document.getElementById('pending-count').textContent = pendingVP1;
+                document.getElementById('published-count').textContent = published;
+                document.getElementById('rejected-count').textContent = rejected;
+                document.getElementById('total-submissions-count').textContent = count;
+
+                // Kwerekana Table y'a Submissions
+                const tableBody = document.getElementById('evangelism-submissions-body');
+                tableBody.innerHTML = '';
+                
+                if (submissions.length === 0) {
+                     tableBody.innerHTML = '<tr><td colspan="4" style="text-align:center; color:var(--muted); padding:20px;">Nta submissions z\'Ivugabutumwa zihari. Kora iya mbere!</td></tr>';
+                     return;
+                }
+                
+                submissions.forEach(submission => {
+                    const statusClass = submission.status.replace(/\s/g, '-');
+                    
+                    const row = tableBody.insertRow();
+                    row.innerHTML = `
+                        <td>${new Date(submission.submission_date).toLocaleDateString()}</td>
+                        <td><strong>${submission.title}</strong></td>
+                        <td><span class="status-badge status-${statusClass}">${submission.status}</span></td>
+                        <td>
+                            <button class="action-btn-view" onclick="viewSubmission('${submission.id}', \`${submission.content.replace(/`/g, '\\`')}\`)">Reba Ibyuzuye</button>
+                        </td>
+                    `;
+                });
+
+            } catch (error) {
+                console.error('Error fetching evangelism data:', error.message);
+            }
+        }
+        
+        // -------------------- FORM SUBMISSION LOGIC --------------------
+
+        // Kwemeza submit ya Form
+        document.addEventListener('DOMContentLoaded', () => {
+             const form = document.getElementById('submissionForm');
+             if (form) {
+                 form.addEventListener('submit', async (e) => {
+                     e.preventDefault();
+                     const messageArea = document.getElementById('submissionMessage');
+                     messageArea.textContent = 'Gutegura no Kohereza...';
+                     messageArea.className = 'message-area';
+
+                     // Data yo kohereza
+                     const submissionData = {
+                         advisor_role: 'evangelism',
+                         title: form.title.value,
+                         content: form.content.value,
+                         status: 'Pending VP1', // Status ya mbere ijya kuri VP1
+                         vp_approved: false,
+                         president_approved: false,
+                         type: form.type.value 
+                     };
+                     
+                     // Get User ID
+                     const { data: { user }, error: authError } = await supabase.auth.getUser();
+                     if (authError || !user) {
+                         messageArea.textContent = 'Error: Ntabwo winjiye neza. Ongera winjire.';
+                         messageArea.className = 'message-area message-error';
+                         return;
+                     }
+                     submissionData.submitted_by = user.id;
+
+                     // Gukora INSERT muri Supabase
+                     const { error } = await supabase
+                         .from('submissions')
+                         .insert([submissionData]);
+
+                     if (error) {
+                         messageArea.textContent = 'Kohereza byanze: ' + error.message;
+                         messageArea.className = 'message-area message-error';
+                     } else {
+                         messageArea.textContent = 'Byakunze! Gahunda yoherejwe kuri VP1 ngo akore Approval.';
+                         messageArea.className = 'message-area message-success';
+                         form.reset();
+                         
+                         // Funga modal maze ukore refresh Dashboard
+                         setTimeout(() => {
+                             closeModal();
+                             fetchEvangelismData(); 
+                         }, 3000);
+                     }
+                 });
+             }
+        });
+        
+        // Kureba ibikubiye muri Submission
+        window.viewSubmission = (id, content) => {
+             alert(`UMUTWE W'A GAHUNDA:\n---\nIBIKUBIYE BYUZUYE:\n${content}\n---\nSubmission ID: ${id.substring(0, 8)}...`);
+        };
+
+
+        // Initialize on load
+        document.addEventListener('DOMContentLoaded', fetchEvangelismData);
+    </script>
+
+
+    <div class="dashboard-container">
+        <div class="sidebar">
+            <h2>CEP Advisor</h2>
+            <p style="color:rgba(255, 255, 255, 0.7); font-size:1rem; margin-bottom: 20px;">Umujyanama w'Ivugabutumwa</p>
+            <a href="#">Dashboard Yanjye</a>
+            <a href="#">Amateka ya Gahunda</a>
+            <a href="#">Raporo z'Amateraniro</a>
+            <a href="#">Logout</a>
+        </div>
+
+        <div class="main-content">
+            <h1>Dashibodi y'Ivugabutumwa n'Amateraniro</h1>
+            <p class="role-subtitle">Inshingano: Gutegura Amateraniro, Ibikorwa by'Ivugabutumwa no Kwigisha.</p>
+            
+            <button class="btn-new-submission" onclick="openModal()">Shyiraho Gahunda nshya</button>
+            <div style="height: 40px;"></div>
+
+            <div class="metric-cards">
+                <div class="card pending">
+                    <h3>Zitegereje Kwemezwa na VP1</h3>
+                    <p id="pending-count">0</p>
+                </div>
+                <div class="card published">
+                    <h3>Zemezwe (Published)</h3>
+                    <p id="published-count">0</p>
+                </div>
+                <div class="card pending">
+                    <h3>Zasubijwe Inyuma (Rejected)</h3>
+                    <p id="rejected-count">0</p>
+                </div>
+                <div class="card">
+                    <h3>Submissions Zose Zakoze</h3>
+                    <p id="total-submissions-count">0</p>
+                </div>
+            </div>
+
+            <h2 class="section-title">Amateka ya Gahunda (Status)</h2>
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th style="width:15%;">Itariki</th>
+                        <th style="width:45%;">Umutwe w'a Gahunda</th>
+                        <th style="width:20%;">Status</th>
+                        <th style="width:20%;">Igikorwa</th>
+                    </tr>
+                </thead>
+                <tbody id="evangelism-submissions-body">
+                    <tr><td colspan="4" style="text-align:center; color:var(--muted);">Gutegereza Data...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+    
+    <div id="submissionModal" class="modal">
+        <div class="modal-content">
+            <span class="close-button" onclick="closeModal()">&times;</span>
+            <h2>Shyiraho Gahunda Nshya y'Ivugabutumwa</h2>
+            <p class="modal-subtitle">Subiza amakuru yuzuye yerekeye igikorwa, maze wohereze kuri VP1 ngo akore *Approval*.</p>
+
+            <form id="submissionForm">
+                <div class="form-group">
+                    <label for="title">Umutwe w'Igikorwa/Ubutumwa:</label>
+                    <input type="text" id="title" name="title" placeholder="Urugero: Igiterane cyo Kwizihiza Ubuhanuzi bwa Gatanu" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="content">Ibisobanuro Byuzuye (Content):</label>
+                    <textarea id="content" name="content" rows="6" placeholder="Sobanura igikorwa kirambuye, harimo n'Itariki, Umwigisha/Abazigisha, n'a Responsables b'Ingenzi." required></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label for="type">Ubuhinduzi bw'Igikorwa (Event Type):</label>
+                    <select id="type" name="type">
+                        <option value="Igiterane">Igiterane (Crusade/Mega Event)</option>
+                        <option value="Isomo">Isomo rya Bibiliya/Gutoranya (Bible Study)</option>
+                        <option value="Amateraniro">Amateraniro asanzwe</option>
+                        <option value="Ibindi">Ibindi...</option>
+                    </select>
+                </div>
+                
+                <button type="submit" class="submit-button">Ohereza Kuri VP1 (Gukora Submission)</button>
+                <p id="submissionMessage" class="message-area"></p>
+            </form>
+        </div>
+    </div>
+</body>
+</html>

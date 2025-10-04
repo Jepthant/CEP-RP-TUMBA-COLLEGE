@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="rw">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Media Advisor Dashboard PRO | CEP RP Tumba</title>
+
+    <style>
+        :root{
+            --bg:#f8f9fa; 
+            --card:#ffffff;
+            --accent:#002147; /* CEP Blue (Primary) */
+            --accent-2:#1f6feb;
+            --gold:#ffd700;
+            --muted:#6c757d;
+            --success:#28a745; 
+            --danger:#dc3545; 
+            --media-primary:#f39c12; /* Bright Orange/Yellow for Media */
+            --media-light: #f1c40f; 
+            --shadow-light: 0 0.5rem 1rem rgba(0, 0, 0, 0.05);
+            --shadow-medium: 0 1rem 3rem rgba(0, 0, 0, 0.1);
+        }
+        *{box-sizing:border-box}
+        body{
+            margin:0;
+            background:var(--bg);
+            font-family:Inter, "Segoe UI", Roboto, Arial, sans-serif;
+            color:#0f1724;
+            -webkit-font-smoothing:antialiased;
+            -moz-osx-font-smoothing:grayscale;
+        }
+
+        /* -------------------- Layout & Sidebar -------------------- */
+        .dashboard-container { display: flex; min-height: 100vh; }
+        .sidebar { width: 280px; background: var(--accent); color: #ffffff; padding: 30px 20px; box-shadow: var(--shadow-medium); position: sticky; top: 0; height: 100vh; }
+        .sidebar h2 { font-size: 1.6rem; text-align: center; margin-bottom: 50px; color: var(--gold); }
+        .sidebar a { display: block; color: #ffffff; text-decoration: none; padding: 12px 15px; margin-bottom: 5px; border-radius: 8px; transition: background 0.3s, padding 0.3s; }
+        .sidebar a:hover { background: rgba(255, 255, 255, 0.1); padding-left: 20px; }
+        .main-content { flex-grow: 1; padding: 40px; }
+        .main-content h1 { color: var(--accent); margin-bottom: 10px; font-size: 2.2rem; }
+        .role-subtitle { color: var(--media-primary); font-size: 1.1rem; margin-bottom: 40px; font-weight: 700; border-bottom: 3px solid var(--media-primary); padding-bottom: 5px; display: inline-block; }
+
+        /* -------------------- Action & Status Cards -------------------- */
+        .action-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 30px; margin-bottom: 40px; }
+        .action-card {
+            background: var(--card); border-radius: 12px; padding: 30px; box-shadow: var(--shadow-medium);
+            border-top: 5px solid var(--media-primary);
+        }
+        .action-card h3 { color: var(--accent); margin-top: 0; font-size: 1.5rem; border-bottom: 1px solid #eee; padding-bottom: 10px; }
+        .action-card p { color: var(--muted); margin-bottom: 20px; }
+        
+        .btn-action { background: var(--media-primary); color: white; border: none; padding: 12px 25px; border-radius: 8px; font-size: 1.05rem; font-weight: 700; cursor: pointer; transition: background 0.2s; width: 100%; }
+        .btn-action:hover { background: #d35400; }
+        
+        /* -------------------- Current Content Display -------------------- */
+        .current-content-section { margin-top: 40px; }
+        .current-content-section h2 { color: var(--media-primary); border-bottom: 2px solid var(--media-light); padding-bottom: 10px; margin-bottom: 20px; font-size: 1.8rem; }
+        .content-grid { display: grid; grid-template-columns: 1fr 2fr; gap: 30px; }
+
+        /* Flayer Card */
+        .flayer-card { border: 1px solid #ddd; border-radius: 8px; padding: 20px; background: #fffaf3; text-align: center; }
+        .flayer-card h4 { color: var(--media-primary); margin-top: 0; }
+        .flayer-card img { max-width: 100%; height: auto; border-radius: 6px; box-shadow: var(--shadow-light); margin-bottom: 10px; }
+        .flayer-status { font-weight: 700; color: var(--success); }
+        .no-flayer { color: var(--danger); font-style: italic; }
+
+        /* Photos Status */
+        .photos-status { border: 1px solid #ddd; border-radius: 8px; padding: 20px; background: #f3fcff; }
+        .photos-status h4 { color: var(--accent); margin-top: 0; }
+        .photo-count-indicator { font-size: 2.5rem; font-weight: 800; color: var(--media-primary); display: inline-block; margin-right: 15px; }
+        .photo-list { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 15px; }
+        .photo-list img { width: 80px; height: 80px; object-fit: cover; border-radius: 4px; border: 2px solid var(--media-light); }
+
+        /* -------------------- Submission History Table -------------------- */
+        .history-section { margin-top: 50px; }
+        .data-table { width: 100%; border-collapse: collapse; background: var(--card); border-radius: 8px; overflow: hidden; box-shadow: var(--shadow-light); }
+        .data-table th, .data-table td { padding: 15px 20px; text-align: left; border-bottom: 1px solid #eee; font-size: 0.95rem; }
+        .data-table th { background: var(--media-primary); color: #ffffff; font-weight: 700; text-transform: uppercase; font-size: 0.9rem; }
+        .data-table tr:hover { background: #fdf5e7; }
+        
+        .status-badge { padding: 6px 12px; border-radius: 20px; font-size: 0.85rem; font-weight: 700; display: inline-block; }
+        .status-Pending-Presidency { background-color: var(--media-light); color: var(--accent); } 
+        .status-Published { background-color: var(--success); color: #fff; }
+        .status-Rejected { background-color: var(--danger); color: #fff; }
+
+        /* -------------------- MODAL & FORM STYLING -------------------- */
+        .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.4); }
+        .modal-content { background-color: var(--card); margin: 5% auto; padding: 30px; border-radius: 12px; width: 90%; max-width: 650px; box-shadow: var(--shadow-medium); animation: fadeIn 0.5s; }
+        .modal-content h2 { color: var(--media-primary); border-bottom: 2px solid var(--media-light); padding-bottom: 10px; margin-bottom: 5px; }
+        
+        .form-group { margin-bottom: 20px; }
+        .form-group label { display: block; margin-bottom: 8px; font-weight: 600; color: var(--accent); }
+        .form-group input[type="text"], .form-group input[type="file"], .form-group textarea, .form-group select {
+            width: 100%; padding: 12px; border: 1px solid #ced4da; border-radius: 6px; font-size: 1rem;
+        }
+        .form-group input:focus, .form-group textarea:focus, .form-group select:focus {
+            border-color: var(--media-primary); 
+            box-shadow: 0 0 0 0.2rem rgba(243, 156, 18, 0.25); 
+            outline: none;
+        }
+        .file-upload-info { font-size: 0.85rem; color: var(--muted); margin-top: 5px; }
+
+        .submit-button { width: 100%; background: var(--media-primary); color: white; border: none; padding: 15px; border-radius: 6px; font-size: 1.1rem; font-weight: 700; cursor: pointer; transition: background 0.2s; margin-top: 10px; }
+        .submit-button:hover { background: #d35400; }
+        
+        .message-area { margin-top: 15px; padding: 10px; border-radius: 5px; text-align: center; font-weight: 600; }
+        .message-success { background-color: #d4edda; color: var(--success); }
+        .message-error { background-color: #f8d7da; color: var(--danger); }
+
+        @media (max-width: 992px) { 
+            .dashboard-container { flex-direction: column; }
+            .sidebar { width: 100%; height: auto; position: static; padding: 20px; }
+            .main-content { padding: 20px; }
+            .action-cards { grid-template-columns: 1fr; }
+            .content-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <script type="module">
+        import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+        
+        // SHYIRAMO URL NA KEY YAWE NYAYO HANO
+        const SUPABASE_URL = "https://snasuickudieijxxwonw.supabase.co"; 
+        const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNuYXN1aWNrdWRpZWlqeHh3b253Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTkzNDY5OTMsImV4cCI6MjA3NDkyMjk5M30.i58HzvLSVO_2_675U38iaxrBQPzdtPOS0yI0HbZcof4"; 
+        window.supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, { auth: { persistSession: true, detectSessionInUrl: false } });
+
+        // Storage Buckets (Tugomba kumenya aho Flayer na Photos bizajya)
+        const FLAYER_BUCKET = 'media_flayers';
+        const PHOTO_BUCKET = 'media_photos';
+        
+        // -------------------- MODAL FUNCTIONS --------------------
+
+        window.openModal = (modalId) => {
+            document.getElementById(modalId).style.display = 'block';
+            document.getElementById('submissionMessage').textContent = '';
+            document.getElementById('submissionMessage').className = 'message-area';
+        };
+
+        window.closeModal = (modalId) => {
+            document.getElementById(modalId).style.display = 'none';
+        };
+
+        // -------------------- MAIN DATA FETCHING --------------------
+
+        async function fetchMediaData() {
+            try {
+                // 1. Fetch Submissions zose za Media
+                const { data: submissions, count, error } = await supabase
+                    .from('media_submissions')
+                    .select('*', { count: 'exact' })
+                    .order('submission_date', { ascending: false });
+
+                if (error) throw error;
+                
+                // 2. Tanda Submissions: Pending, Published, Rejected
+                const pending = submissions.filter(s => s.status === 'Pending Presidency').length;
+                const published = submissions.filter(s => s.status === 'Published').length;
+
+                document.getElementById('pending-count').textContent = pending;
+                document.getElementById('published-count').textContent = published;
+                document.getElementById('total-submissions-count').textContent = count;
+                
+                // 3. Update Current Content Display (Kare Flayer n'a Photos)
+                updateCurrentContentDisplay(submissions);
+
+                // 4. Kwerekana Table y'a Submissions
+                renderHistoryTable(submissions);
+
+            } catch (error) {
+                console.error('Error fetching media data:', error.message);
+                alert('Ikibazo mu guhamagara amakuru: ' + error.message);
+            }
+        }
+        
+        // -------------------- UPDATE CURRENT CONTENT DISPLAY --------------------
+        
+        async function updateCurrentContentDisplay(submissions) {
+            const currentFlayer = submissions.find(s => s.type === 'flayer' && s.status === 'Published');
+            const currentPhotos = submissions.filter(s => s.type === 'photo' && s.status === 'Published');
+            
+            const flayerCard = document.getElementById('current-flayer-card');
+            flayerCard.innerHTML = `<h4>Current Homepage Flayer</h4>`;
+            
+            if (currentFlayer) {
+                 flayerCard.innerHTML += `
+                     <img src="${currentFlayer.storage_url}" alt="${currentFlayer.title}" style="max-height: 250px;">
+                     <p><strong>Umutwe:</strong> ${currentFlayer.title}</p>
+                     <p class="flayer-status">Status: Published ku Itariki ${new Date(currentFlayer.published_date).toLocaleDateString()}</p>
+                 `;
+            } else {
+                 flayerCard.innerHTML += `<p class="no-flayer">Nta Flayer iri kuri Homepage ubu.</p>`;
+            }
+            
+            // Photos (Attachments)
+            const photoStatus = document.getElementById('photos-status-card');
+            const photoListHtml = currentPhotos.map(p => `<img src="${p.storage_url}" alt="${p.title}">`).join('');
+
+            photoStatus.innerHTML = `
+                <h4>Current Photos on Homepage Slider</h4>
+                <p>Ubusanzwe hagaragara amafoto <span class="photo-count-indicator">${currentPhotos.length}/4</span>.</p>
+                <div class="photo-list">${photoListHtml}</div>
+            `;
+        }
+        
+        // -------------------- TABLE RENDERING --------------------
+
+        function renderHistoryTable(submissions) {
+            const tableBody = document.getElementById('media-submissions-body');
+            tableBody.innerHTML = '';
+            
+            const recentSubmissions = submissions.slice(0, 10); // Erekana 10 gusa
+
+            if (recentSubmissions.length === 0) {
+                 tableBody.innerHTML = '<tr><td colspan="4" style="text-align:center; color:var(--muted); padding:20px;">Nta submissions zihari ubu.</td></tr>';
+                 return;
+            }
+            
+            recentSubmissions.forEach(submission => {
+                const statusClass = submission.status.replace(/\s/g, '-');
+                
+                const row = tableBody.insertRow();
+                row.innerHTML = `
+                    <td>${new Date(submission.submission_date).toLocaleDateString()}</td>
+                    <td><strong>${submission.title}</strong> (${submission.type.toUpperCase()})</td>
+                    <td><span class="status-badge status-${statusClass}">${submission.status}</span></td>
+                    <td>
+                        <a href="${submission.storage_url || '#'}" target="_blank" style="color:var(--accent-2); text-decoration:none;">Reba File</a>
+                    </td>
+                `;
+            });
+        }
+        
+        // -------------------- SUBMISSION LOGIC --------------------
+
+        // Gushyiraho File Muri Supabase Storage
+        async function uploadFile(file, bucketName, folder) {
+             const fileExtension = file.name.split('.').pop();
+             const fileName = `${folder}/${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExtension}`;
+
+             const { data, error } = await supabase.storage
+                 .from(bucketName)
+                 .upload(fileName, file, {
+                     cacheControl: '3600',
+                     upsert: false
+                 });
+
+             if (error) throw error;
+             
+             // Gukora Public URL
+             const { data: publicUrlData } = supabase.storage
+                 .from(bucketName)
+                 .getPublicUrl(fileName);
+                 
+             return publicUrlData.publicUrl;
+        }
+
+        // Kwemeza submit ya Form ya Flayer/Photo
+        async function handleSubmit(e, type) {
+            e.preventDefault();
+            
+            const form = e.target;
+            const title = form.title.value;
+            const fileInput = form.file;
+            const file = fileInput.files[0];
+            const modalId = type === 'flayer' ? 'flayerModal' : 'photosModal';
+            
+            const messageArea = document.getElementById('submissionMessage');
+            messageArea.textContent = 'Gutegura no Kohereza...';
+            messageArea.className = 'message-area';
+            
+            if (!file) {
+                 messageArea.textContent = 'Bitegetswe gushyiramo File!';
+                 messageArea.className = 'message-area message-error';
+                 return;
+            }
+
+            try {
+                 // 1. Gushyira File muri Storage
+                 const bucket = type === 'flayer' ? FLAYER_BUCKET : PHOTO_BUCKET;
+                 const storageUrl = await uploadFile(file, bucket, type);
+                 
+                 // 2. Gukora Submission Muri Database
+                 const submissionData = {
+                     advisor_role: 'media',
+                     title: title,
+                     type: type, 
+                     storage_url: storageUrl, 
+                     status: 'Pending Presidency', // Byose bijya kuri Presidency
+                 };
+
+                 const { error } = await supabase
+                     .from('media_submissions')
+                     .insert([submissionData]);
+
+                 if (error) throw error;
+
+                 messageArea.textContent = `Byakunze! ${type.toUpperCase()} yoherejwe kuri Presidency ngo ikore Approval.`;
+                 messageArea.className = 'message-area message-success';
+                 form.reset();
+                 
+                 setTimeout(() => {
+                     closeModal(modalId);
+                     fetchMediaData(); 
+                 }, 3000);
+            } catch (error) {
+                 messageArea.textContent = `Kohereza byanze: ` + error.message;
+                 messageArea.className = 'message-area message-error';
+                 console.error('Submission Error:', error);
+            }
+        }
+        
+        // Kwemeza Forms zombi
+        document.addEventListener('DOMContentLoaded', () => {
+             document.getElementById('flayerForm').addEventListener('submit', (e) => handleSubmit(e, 'flayer'));
+             document.getElementById('photosForm').addEventListener('submit', (e) => handleSubmit(e, 'photo'));
+        });
+
+
+        // Initialize on load
+        document.addEventListener('DOMContentLoaded', fetchMediaData);
+    </script>
+
+
+    <div class="dashboard-container">
+        <div class="sidebar">
+            <h2>CEP Advisor</h2>
+            <p style="color:var(--gold); font-size:1.1rem; font-weight:700; margin-bottom: 20px;">Umujyanama wa Media</p>
+            <a href="#">Dashboard Yanjye</a>
+            <a href="#">Amateka ya Submissions</a>
+            <a href="#">Gutegura Content</a>
+            <a href="#">Logout</a>
+        </div>
+
+        <div class="main-content">
+            <h1>Dashibodi y'Umujyanama wa Media (Digital Content)</h1>
+            <p class="role-subtitle">Inshingano: Gukora no Gushyiraho Content igaragara kuri Homepage/Social Media za CEP.</p>
+            
+            <div class="action-cards">
+                <div class="action-card">
+                    <h3>Gushyiraho Flayer Nshya (Homepage)</h3>
+                    <p>Flayer irimo izasimbuzwa niyi nshya mugihe Prezida yayemeje. (One-in, One-out)</p>
+                    <button class="btn-action" onclick="openModal('flayerModal')">Ohereza Flayer Nshya</button>
+                </div>
+                <div class="action-card">
+                    <h3>Gusimbuza Photos (Max 4)</h3>
+                    <p>Ohereza Ifoto nshya kugirango isimbuze iyariho. (Igisumba izisanzwe cyose kiba Approved)</p>
+                    <button class="btn-action" onclick="openModal('photosModal')">Ohereza Ifoto Nshya (1/4)</button>
+                </div>
+            </div>
+
+            <div class="current-content-section">
+                <h2>Ibirimo Kuri Homepage Ubu</h2>
+                <div class="content-grid">
+                    <div class="flayer-card" id="current-flayer-card">
+                        <h4>Current Homepage Flayer</h4>
+                        <p class="no-flayer">Gutegereza Flayer...</p>
+                    </div>
+                    <div class="photos-status" id="photos-status-card">
+                        <h4>Current Photos on Homepage Slider</h4>
+                        <p>Loading...</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="history-section">
+                 <h2 style="color: var(--accent); border-color: var(--media-primary);">Amateka y'Ibyoherejwe (Latest 10)</h2>
+                 <p style="color:var(--muted);">Zose zitegereje kwemezwa na President wa CEP mbere yo kujya hanze.</p>
+                 <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th style="width:15%;">Itariki</th>
+                            <th style="width:45%;">Umutwe & Ubwoko</th>
+                            <th style="width:20%;">Status</th>
+                            <th style="width:20%;">File</th>
+                        </tr>
+                    </thead>
+                    <tbody id="media-submissions-body">
+                        <tr><td colspan="4" style="text-align:center; color:var(--muted);">Gutegereza Data...</td></tr>
+                    </tbody>
+                 </table>
+            </div>
+
+            <div class="action-cards" style="margin-top: 40px;">
+                <div class="card" style="border-left-color: var(--media-primary);">
+                    <h3>Zitegereje Kwemezwa na Prezida</h3>
+                    <p id="pending-count">0</p>
+                </div>
+                <div class="card" style="border-left-color: var(--success);">
+                    <h3>Zemezwe (Published)</h3>
+                    <p id="published-count">0</p>
+                </div>
+                 <div class="card" style="border-left-color: var(--warning);">
+                    <h3>Total Submissions Zose</h3>
+                    <p id="total-submissions-count">0</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div id="flayerModal" class="modal">
+        <div class="modal-content">
+            <span class="close-button" onclick="closeModal('flayerModal')">&times;</span>
+            <h2>Ohereza Flayer Nshya ya Homepage</h2>
+            <p class="modal-subtitle">Iyi Flayer igomba kuba ari IMWE gusa. Iyahari izasimbuzwa niyi nshya Prezida nayemeza.</p>
+
+            <form id="flayerForm">
+                <div class="form-group">
+                    <label for="flayer-title">Umutwe w'Igikorwa:</label>
+                    <input type="text" id="flayer-title" name="title" placeholder="Urugero: Igiterane cy'Imporezo" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="flayer-file">Shyiramo Flayer (JPG/PNG):</label>
+                    <input type="file" id="flayer-file" name="file" accept=".jpg, .jpeg, .png" required>
+                    <p class="file-upload-info">Igomba kuba file y'ifoto (max 2MB).</p>
+                </div>
+                
+                <button type="submit" class="submit-button">Ohereza Kuri Presidency (Gusaba Kwemezwa)</button>
+                <p id="submissionMessage" class="message-area"></p>
+            </form>
+        </div>
+    </div>
+    
+    <div id="photosModal" class="modal">
+        <div class="modal-content">
+            <span class="close-button" onclick="closeModal('photosModal')">&times;</span>
+            <h2>Ohereza Ifoto Nshya (Gusimbuza Iyahari)</h2>
+            <p class="modal-subtitle">Gahunda yemewe ni **amafoto 4 gusa** k'a Homepage. Iyi foto izasimbuza iyasanzweho.</p>
+
+            <form id="photosForm">
+                <div class="form-group">
+                    <label for="photo-title">Umutwe w'Ifoto (Brief Description):</label>
+                    <input type="text" id="photo-title" name="title" placeholder="Urugero: Abaririmbyi muri Tumba Camp" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="photo-file">Shyiramo Ifoto (JPG/PNG):</label>
+                    <input type="file" id="photo-file" name="file" accept=".jpg, .jpeg, .png" required>
+                    <p class="file-upload-info">Igomba kuba file y'ifoto (max 2MB).</p>
+                </div>
+                
+                <button type="submit" class="submit-button">Ohereza Kuri Presidency (Gusaba Kwemezwa)</button>
+                <p id="submissionMessage" class="message-area"></p>
+            </form>
+        </div>
+    </div>
+</body>
+</html>
