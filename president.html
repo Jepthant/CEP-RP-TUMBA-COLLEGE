@@ -1,474 +1,529 @@
 <!DOCTYPE html>
 <html lang="rw">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Admin Dashboard | CEP Leadership</title>
-  
-  <script type="module">
-    import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
-    // KOSORA: Supabase Project Values (Koresha izo wakoresheje mbere)
-    const SUPABASE_URL = "https://snasuickudieijxxwonw.supabase.co"; 
-    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNuYXN1aWNrdWRpZWlqeHh3b253Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTkzNDY5OTMsImV4cCI6MjA3NDkyMjk5M30.i58HzvLSVO_2_675U38iaxrBQPzdtPOS0yI0HbZcof4"; 
-    window.supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
-        auth: { persistSession: true, detectSessionInUrl: false }
-    });
-  </script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>President Master Dashboard - CEP RP Tumba</title>
 
-  <style>
-    /* CSS yose ni nk'iya dashboard.html, twongeraho style ya Admin */
-    :root{
-      --bg:#f4f7fb;
-      --card:#ffffff;
-      --accent:#002147; 
-      --accent-2:#1f6feb; 
-      --gold:#ffd700;
-      --muted:#667085;
-      --success:#16a085;
-      --danger:#e74c3c;
-    }
-    *{box-sizing:border-box}
-    body{
-      margin:0; background:var(--bg); font-family:Inter, sans-serif; color:#0f1724;
-      -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale;
-    }
-    .dashboard-wrap { display: flex; min-height: 100vh; }
-    .sidebar { width: 280px; background: var(--accent); color: white; padding: 24px 0; flex-shrink: 0; }
-    .logo-side { padding: 0 24px 30px; }
-    .logo-side h2 { margin: 0; font-size: 1.4rem; color: var(--gold); }
-    .nav-link { display: flex; align-items: center; padding: 14px 24px; color: rgba(255,255,255,0.8); text-decoration: none; transition: background 0.2s; font-weight: 500; }
-    .nav-link:hover { background: rgba(255,255,255,0.08); }
-    .nav-link.active { background: #003b73; color: white; border-left: 4px solid var(--gold); padding-left: 20px; font-weight: 700; }
-    .main-content { flex-grow: 1; padding: 30px 40px; }
-    .card { padding: 25px; background: var(--card); border-radius: 10px; box-shadow: 0 2px 8px rgba(15,23,36,0.05); margin-top: 20px; }
-    .form-group { margin-bottom: 15px; }
-    label { font-size: 0.9rem; color:#101828; margin-bottom: 5px; display: block; font-weight: 600; }
-    input, select, textarea { width: 100%; padding: 10px 12px; border-radius: 8px; border: 1px solid #e6eef8; font-size: 1rem; }
-    button.primary{ padding:12px 14px; border-radius:10px; border:none; background:var(--accent-2); color:white; font-weight:700; cursor:pointer; transition:background .2s; }
-    .alert { padding:10px 12px; border-radius:8px; font-weight:600; margin-bottom: 15px; display: none; }
-    .alert.error{ background:rgba(231,76,60,0.08); color:var(--danger); border:1px solid rgba(231,76,60,0.12); }
-    .alert.success{ background:rgba(22,160,133,0.06); color:var(--success); border:1px solid rgba(22,160,133,0.12); }
+    <style>
+        :root{
+            --bg:#f4f6f9; 
+            --card:#ffffff;
+            --accent:#002147; /* CEP Navy Blue (Primary) */
+            --gold:#f1c40f; /* Master Authority Gold/Yellow */
+            --muted:#6c757d;
+            --success:#28a745; 
+            --danger:#dc3545; 
+            --social-teal:#1abc9c; 
+            --media-orange:#f39c12; 
+            --finance-green:#2ecc71; 
+            --shadow-light: 0 0.5rem 1rem rgba(0, 0, 0, 0.05);
+            --shadow-medium: 0 1rem 3rem rgba(0, 0, 0, 0.1);
+        }
+        *{box-sizing:border-box}
+        body{
+            margin:0;
+            background:var(--bg);
+            font-family:Inter, "Segoe UI", Roboto, Arial, sans-serif;
+            color:#0f1724;
+            -webkit-font-smoothing:antialiased;
+            -moz-osx-font-smoothing:grayscale;
+        }
 
-    /* Tables Style (Service Requests) */
-    .data-table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-    .data-table th, .data-table td { padding: 12px 15px; text-align: left; border-bottom: 1px solid #e6eef8; font-size: 0.9rem; }
-    .data-table th { background: var(--bg); color: var(--accent); font-weight: 600; }
-    .data-table tr:hover { background: #fafafa; }
-    .status-badge { padding: 4px 8px; border-radius: 6px; font-size: 0.8rem; font-weight: 700; }
-    .status-pending { background: #ffe680; color: #cc8400; }
-    .status-approved { background: #b0ffc7; color: #16a085; }
-    .status-declined { background: #ffb3b3; color: #e74c3c; }
-    .status-completed { background: #d7e2ff; color: var(--accent); }
-    
-    /* Action Buttons */
-    .action-btn { background: none; border: 1px solid var(--accent-2); color: var(--accent-2); padding: 5px 10px; border-radius: 5px; margin-right: 5px; cursor: pointer; transition: background 0.2s; }
-    .action-btn:hover { background: var(--accent-2); color: white; }
-  </style>
+        /* -------------------- Layout & Sidebar -------------------- */
+        .dashboard-container { display: flex; min-height: 100vh; }
+        .sidebar { width: 280px; background: var(--accent); color: #ffffff; padding: 30px 20px; box-shadow: var(--shadow-medium); position: sticky; top: 0; height: 100vh; }
+        .sidebar h2 { font-size: 1.8rem; text-align: center; margin-bottom: 50px; color: var(--gold); }
+        .sidebar a { display: block; color: #ffffff; text-decoration: none; padding: 12px 15px; margin-bottom: 5px; border-radius: 8px; transition: background 0.3s, padding-left 0.3s; font-weight: 500;}
+        .sidebar a:hover { background: rgba(255, 255, 255, 0.1); padding-left: 20px; }
+        .main-content { flex-grow: 1; padding: 40px; }
+        .main-content h1 { color: var(--accent); margin-bottom: 10px; font-size: 2.5rem; }
+        .role-subtitle { color: var(--gold); font-size: 1.2rem; margin-bottom: 40px; font-weight: 700; border-bottom: 4px solid var(--gold); padding-bottom: 5px; display: inline-block; }
+        
+        /* -------------------- Master Metrics Cards -------------------- */
+        .metric-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 25px; margin-bottom: 40px; }
+        .card { background: var(--card); border-radius: 12px; padding: 25px; box-shadow: var(--shadow-medium); border-top: 5px solid transparent; }
+        .card h3 { margin: 0 0 10px 0; font-size: 1rem; color: var(--muted); font-weight: 600; text-transform: uppercase; }
+        .card p { font-size: 2.5rem; font-weight: 800; margin: 0; }
+        
+        /* Card Colors by Role */
+        .card.master-pending { border-top-color: var(--gold); }
+        .card.master-pending p { color: var(--gold); }
+        .card.social-pending { border-top-color: var(--social-teal); }
+        .card.social-pending p { color: var(--social-teal); }
+        .card.media-pending { border-top-color: var(--media-orange); }
+        .card.media-pending p { color: var(--media-orange); }
+        .card.finance-pending { border-top-color: var(--finance-green); }
+        .card.finance-pending p { color: var(--finance-green); }
+
+        /* -------------------- Master Approval Table -------------------- */
+        .section-title { color: var(--accent); margin-top: 30px; margin-bottom: 20px; font-size: 1.8rem; border-bottom: 1px solid #ddd; padding-bottom: 10px; }
+        
+        .data-table { width: 100%; border-collapse: collapse; background: var(--card); border-radius: 8px; overflow: hidden; box-shadow: var(--shadow-medium); margin-bottom: 30px;}
+        .data-table th, .data-table td { padding: 15px 20px; text-align: left; border-bottom: 1px solid #eee; font-size: 0.95rem; }
+        .data-table th { background: var(--accent); color: #ffffff; font-weight: 700; text-transform: uppercase; font-size: 0.9rem; }
+        .data-table tr:hover { background: #fcfcf4; }
+        
+        .status-badge { padding: 6px 12px; border-radius: 20px; font-size: 0.85rem; font-weight: 700; display: inline-block; }
+        .status-Approved-VP { background-color: var(--social-teal); color: white; } 
+        .status-Pending-Presidency { background-color: var(--media-orange); color: white; } 
+        .status-Finance-Pending { background-color: var(--finance-green); color: white; }
+        
+        /* Action Group (Buttons) */
+        .action-group button { margin-left: 5px; padding: 8px 12px; border-radius: 5px; cursor: pointer; transition: background 0.2s, transform 0.1s; font-weight: 600; font-size: 0.9rem; border: none; }
+        .btn-view { background: var(--accent); color: white; }
+        .btn-approve { background: var(--success); color: white; }
+        .btn-reject { background: var(--danger); color: white; }
+        .btn-reject:hover { background: #a82433; }
+        
+        /* -------------------- MODAL STYLING (APPROVAL) -------------------- */
+        .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.5); }
+        .modal-content {
+            background-color: var(--card); margin: 5% auto; padding: 30px; border-radius: 12px;
+            width: 90%; max-width: 700px; box-shadow: var(--shadow-medium); animation: fadeIn 0.5s;
+        }
+        .modal-content h2 { color: var(--accent); border-bottom: 2px solid var(--gold); padding-bottom: 10px; margin-bottom: 10px; }
+        
+        .submission-detail { margin-bottom: 20px; padding: 15px; border: 1px solid #ddd; border-radius: 8px; }
+        .submission-detail h3 { color: var(--gold); margin-top: 0; }
+        .submission-detail p { white-space: pre-wrap; font-size: 1rem; line-height: 1.6; }
+        .submission-detail a { color: var(--social-teal); font-weight: 600; }
+        
+        #rejection-area { border-top: 1px solid #ddd; padding-top: 20px; margin-top: 20px; }
+        #rejection-area label { display: block; margin-bottom: 8px; font-weight: 600; color: var(--danger); }
+        #rejection-reason { width: 100%; padding: 10px; border: 1px solid #ced4da; border-radius: 6px; resize: vertical; }
+
+        .modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px; }
+        .modal-actions button { padding: 10px 20px; border: none; border-radius: 6px; font-weight: 700; }
+        .btn-modal-publish { background: var(--success); color: white; }
+        .btn-modal-reject { background: var(--danger); color: white; }
+        .btn-modal-close { background: var(--muted); color: white; }
+
+        .message-area { margin-top: 15px; padding: 10px; border-radius: 5px; text-align: center; font-weight: 600; }
+        .message-success { background-color: #d4edda; color: var(--success); }
+        .message-error { background-color: #f8d7da; color: var(--danger); }
+
+        @media (max-width: 992px) { 
+            .dashboard-container { flex-direction: column; }
+            .sidebar { width: 100%; height: auto; position: static; padding: 20px; }
+            .main-content { padding: 20px; }
+            .metric-cards { grid-template-columns: 1fr; }
+        }
+    </style>
 </head>
 <body>
-  <div class="dashboard-wrap">
+    <script type="module">
+        import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+        
+        // SHYIRAMO URL NA KEY YAWE NYAYO HANO
+        const SUPABASE_URL = "https://snasuickudieijxxwonw.supabase.co"; 
+        const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNuYXN1aWNrdWRpZWlqeHh3b253Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTkzNDY5OTMsImV4cCI6MjA3NDkyMjk5M30.i58HzvLSVO_2_675U38iaxrBQPzdtPOS0yI0HbZcof4"; 
+        window.supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, { auth: { persistSession: true, detectSessionInUrl: false } });
 
-    <div class="sidebar">
-      <div class="logo-side">
-        <h2 style="color:var(--danger);">ADMIN CEP</h2>
-        <p style="color:var(--gold);">Gucunga Umuryango</p>
-      </div>
+        const FLAYER_BUCKET = 'media_flayers';
+        const PHOTO_BUCKET = 'media_photos';
+        
+        let currentSubmission = null;
 
-      <a href="#" class="nav-link active" data-section="overview">📈 Overview</a>
-      <a href="#" class="nav-link" data-section="services">📝 Ibyifuzo bya Serivisi</a>
-      <a href="#" class="nav-link" data-section="role_management">🛡️ Gushyiraho Abayobozi</a>
-      <a href="#" class="nav-link" id="btnLogout">➡️ Gusohoka</a>
-    </div>
+        // -------------------- MODAL FUNCTIONS --------------------
 
-    <div class="main-content">
-      <h1 style="color:var(--accent);">Konti y'Umuyobozi Mukuru (<span id="adminRoleDisplay">Loading...</span>)</h1>
+        window.openApprovalModal = (submission) => {
+            currentSubmission = submission;
+            document.getElementById('modal-submission-title').textContent = submission.title || submission.report_title;
+            
+            const detailContent = document.getElementById('modal-submission-content');
+            detailContent.innerHTML = ''; // Clear previous content
+            
+            // Format Content based on Type
+            if (submission.advisor_role === 'social') {
+                 document.getElementById('modal-type').textContent = 'Gahunda y\'Imibereho Myiza (VP2 Approved)';
+                 detailContent.innerHTML = `<p><strong>Ibisobanuro:</strong> ${submission.content}</p>`;
+            } else if (submission.advisor_role === 'media') {
+                 document.getElementById('modal-type').textContent = `Content ya Media (${submission.type.toUpperCase()})`;
+                 detailContent.innerHTML = `
+                     <p><strong>Ubwoko:</strong> ${submission.type.toUpperCase()}</p>
+                     <p><strong>File:</strong> <a href="${submission.storage_url}" target="_blank">Reba File (Flayer/Photo)</a></p>
+                 `;
+            } else if (submission.advisor_role === 'finance') {
+                 document.getElementById('modal-type').textContent = `Raporo y\'Imari (${submission.report_type})`;
+                 const incomeDetails = JSON.parse(submission.income_details || '[]');
+                 const expenseDetails = JSON.parse(submission.expense_details || '[]');
 
-      <section id="overview-section">
-        <div class="card">
-            <h3>Ibirebana n'Imibare</h3>
-            <p>Hano niho hazajya haboneka imibare y'abanyamuryango, serivisi, n'ibindi by'ingenzi.</p>
-        </div>
-      </section>
-
-      <section id="services-section" style="display:none;">
-        <h2 style="color:var(--accent);">Ibyifuzo bya Serivisi by'Abanyamuryango</h2>
-        <div class="card">
-            <div id="serviceListAlert" class="alert"></div>
-            <table class="data-table">
-                <thead>
-                    <tr>
-                        <th>ID</th>
-                        <th>Umukristo</th>
-                        <th>Ubwoko</th>
-                        <th>Status</th>
-                        <th>Igikorwa</th>
-                    </tr>
-                </thead>
-                <tbody id="serviceRequestsList">
-                    <tr><td colspan="5" style="text-align:center;">Nta byifuzo bihari cyangwa birimo gukururwa...</td></tr>
-                </tbody>
-            </table>
-        </div>
-      </section>
-      
-      <section id="role_management-section" style="display:none;">
-        <h2 style="color:var(--accent);">Gushyiraho cyangwa Guhindura Abayobozi</h2>
-        <div class="card">
-            <div id="roleAlert" class="alert"></div>
-            <form id="roleManagementForm">
-                <div class="form-group">
-                    <label for="memberEmail">Email y'Umunyamuryango (cyangwa UUID ya Supabase)</label>
-                    <input id="memberEmail" type="text" placeholder="Email (e.g., jane@example.com)" required>
-                </div>
-                <div class="form-group">
-                    <label for="newRole">Role Nshya</label>
-                    <select id="newRole" required>
-                        <option value="">-- Kura Roles--</option>
-                    </select>
-                </div>
-                <button class="primary" type="submit" id="btnAssignRole">Shyiraho/Hagarika Role</button>
-            </form>
-        </div>
-
-        <div class="card" style="margin-top:30px;">
-            <h3>Gushakisha Imyirondoro ya Buri Mukristo</h3>
-            <div id="userListAlert" class="alert"></div>
-            <table class="data-table">
-                <thead>
-                    <tr>
-                        <th>Izina</th>
-                        <th>Email</th>
-                        <th>Roles</th>
-                        <th>Action</th>
-                    </tr>
-                </thead>
-                <tbody id="allUsersList">
-                    <tr><td colspan="4" style="text-align:center;">Abakristo bari gukururwa...</td></tr>
-                </tbody>
-            </table>
-        </div>
-      </section>
-    </div>
-  </div>
-
-<script type="module">
-    // Supabase client yagizwe Global hejuru
-    const supabase = window.supabase;
-    
-    // Elements zo mu Gice cya HTML
-    const sections = {
-        'overview': document.getElementById('overview-section'),
-        'services': document.getElementById('services-section'),
-        'role_management': document.getElementById('role_management-section'),
-    };
-    const navLinks = document.querySelectorAll('.nav-link[data-section]');
-    const roleAlert = document.getElementById('roleAlert');
-    const serviceListAlert = document.getElementById('serviceListAlert');
-    const userListAlert = document.getElementById('userListAlert');
-
-    let allRoles = [];
-    let currentUserRole = 'member'; // Default Role
-
-    function showAlert(el, msg, type = 'success') {
-        el.innerText = msg;
-        el.className = `alert ${type}`;
-        el.style.display = 'block';
-        setTimeout(() => el.style.display = 'none', 8000);
-    }
-
-    function showSection(sectionId) {
-        Object.keys(sections).forEach(key => {
-            sections[key].style.display = 'none';
-        });
-        if (sections[sectionId]) {
-            sections[sectionId].style.display = 'block';
-        }
-        navLinks.forEach(link => {
-            link.classList.remove('active');
-            if (link.getAttribute('data-section') === sectionId) {
-                link.classList.add('active');
+                 detailContent.innerHTML = `
+                     <p><strong>Igihe:</strong> ${submission.reporting_period}</p>
+                     <p><strong>Commentary:</strong> ${submission.commentary || 'Nta Commentary itanzwe.'}</p>
+                     <p><strong>Amafaranga Yinjiye:</strong> ${formatCurrency(submission.total_income)}</p>
+                     <p><strong>Amafaranga Yasohotse:</strong> ${formatCurrency(submission.total_expense)}</p>
+                     <p><strong>Balance:</strong> ${formatCurrency(submission.final_balance)}</p>
+                     <p><strong>Details (Income):</strong> ${renderFinanceDetails(incomeDetails)}</p>
+                     <p><strong>Details (Expense):</strong> ${renderFinanceDetails(expenseDetails)}</p>
+                 `;
             }
-        });
 
-        // Gukurura amakuru bitewe n'igice
-        if (sectionId === 'services') fetchServiceRequests();
-        if (sectionId === 'role_management') {
-            fetchRoles();
-            fetchAllUsers();
-        }
-    }
+            document.getElementById('rejection-area').style.display = 'none';
+            document.getElementById('submissionMessage').textContent = '';
+            toggleRejection(false, true); // Reset rejection buttons
+            document.getElementById('approvalModal').style.display = 'block';
+        };
 
-    // Navigation and Logout
-    navLinks.forEach(link => {
-        link.addEventListener('click', (e) => {
-            e.preventDefault();
-            showSection(e.currentTarget.getAttribute('data-section'));
-        });
-    });
+        window.closeModal = () => {
+            document.getElementById('approvalModal').style.display = 'none';
+            currentSubmission = null;
+        };
 
-    document.getElementById('btnLogout').addEventListener('click', async (e) => {
-        e.preventDefault();
-        await supabase.auth.signOut();
-        window.location.href = 'login.html';
-    });
-
-    // -------------------------------------------------------------
-    // GUCUNGA IBYIFUZO (Service Requests Logic)
-    // -------------------------------------------------------------
-
-    async function fetchServiceRequests() {
-        // Gukurura ibyifuzo hamwe n'Izina ry'Umusaba
-        const { data: requests, error } = await supabase
-            .from('service_requests')
-            .select(`
-                id, 
-                service_type, 
-                details, 
-                status, 
-                requested_at, 
-                user_id,
-                users (full_name, email, phone) 
-            `)
-            .order('requested_at', { ascending: false });
-
-        const listEl = document.getElementById('serviceRequestsList');
-        listEl.innerHTML = '';
-        
-        if (error) {
-            listEl.innerHTML = `<tr><td colspan="5" style="color:var(--danger); text-align:center;">Gukurura byanze: ${error.message} (Genzura RLS Policy ya 'service_requests')</td></tr>`;
-            return;
-        }
-
-        if (requests.length === 0) {
-            listEl.innerHTML = `<tr><td colspan="5" style="text-align:center; color:var(--muted);">Nta byifuzo bishya bihari.</td></tr>`;
-            return;
-        }
-
-        requests.forEach(req => {
-            const user = req.users || { full_name: 'Unknown', email: 'N/A' };
+        window.toggleRejection = (show, forceInitial = false) => {
+            document.getElementById('rejection-area').style.display = show ? 'block' : 'none';
             
-            const row = document.createElement('tr');
-            row.innerHTML = `
-                <td>${req.id.substring(0, 4)}...</td>
-                <td>${user.full_name} (<a href="mailto:${user.email}">${user.email}</a>)</td>
-                <td>${req.service_type}</td>
-                <td><span class="status-badge status-${req.status}">${req.status.toUpperCase()}</span></td>
-                <td>
-                    <button class="action-btn" data-id="${req.id}" data-status="approved">Emeza</button>
-                    <button class="action-btn" data-id="${req.id}" data-status="declined" style="border-color:var(--danger); color:var(--danger);">Hagarika</button>
-                </td>
-            `;
-            listEl.appendChild(row);
-        });
-
-        listEl.addEventListener('click', handleServiceAction);
-    }
-
-    async function handleServiceAction(e) {
-        if (!e.target.classList.contains('action-btn')) return;
-        
-        const reqId = e.target.getAttribute('data-id');
-        const newStatus = e.target.getAttribute('data-status');
-        const { data: { user } } = await supabase.auth.getUser();
-
-        if (!user) return;
-
-        serviceListAlert.style.display = 'none';
-
-        const { error } = await supabase
-            .from('service_requests')
-            .update({ 
-                status: newStatus, 
-                approved_by: user.id,
-                // Iyi ikeneye RLS Policy yemereye President/Secretary gukora UPDATE
-            })
-            .eq('id', reqId);
-
-        if (error) {
-            showAlert(serviceListAlert, `Kugira status ${newStatus} byanze: ${error.message}`, 'error');
-        } else {
-            showAlert(serviceListAlert, `Icyifuzo ${reqId.substring(0, 4)}... cyashyizwe kuri ${newStatus.toUpperCase()}`, 'success');
-            fetchServiceRequests(); // Kongera gukurura
-        }
-    }
-
-
-    // -------------------------------------------------------------
-    // ROLE MANAGEMENT (Gushyiraho Abayobozi)
-    // -------------------------------------------------------------
-    
-    async function fetchRoles() {
-        const { data: roles, error } = await supabase
-            .from('roles')
-            .select('*')
-            .order('id', { ascending: true });
-
-        const selectEl = document.getElementById('newRole');
-        selectEl.innerHTML = '<option value="">-- Hitamo Role Nshya --</option>';
-
-        if (error) {
-            selectEl.innerHTML = `<option value="">Error: ${error.message}</option>`;
-            return;
-        }
-
-        allRoles = roles;
-        roles.forEach(role => {
-            selectEl.innerHTML += `<option value="${role.name}">${role.name.toUpperCase()} - ${role.description}</option>`;
-        });
-    }
-
-    async function fetchAllUsers() {
-        // Gukurura abakristo bose hamwe na roles zabo (koresha View niba ihari)
-        // Kubera ko View users_full idafite, dukoresheye query nini cyane
-        const { data: users, error } = await supabase
-            .from('users')
-            .select(`
-                id,
-                full_name,
-                email,
-                user_roles(role_id, role:roles(name)) 
-            `)
-            .order('full_name', { ascending: true });
-        
-        const listEl = document.getElementById('allUsersList');
-        listEl.innerHTML = '';
-        userListAlert.style.display = 'none';
-
-        if (error) {
-            listEl.innerHTML = `<tr><td colspan="4" style="color:var(--danger); text-align:center;">Error: ${error.message} (RLS kuri 'users' na 'user_roles')</td></tr>`;
-            return;
-        }
-
-        users.forEach(user => {
-            const roleNames = user.user_roles.map(ur => ur.role.name).join(' / ') || 'Nta Role';
+            const step1 = document.getElementById('reject-step1');
+            const step2 = document.getElementById('reject-step2');
+            const approveBtn = document.getElementById('publish-button');
             
-            const row = document.createElement('tr');
-            row.innerHTML = `
-                <td>${user.full_name}</td>
-                <td>${user.email}</td>
-                <td>${roleNames}</td>
-                <td>
-                    <button class="action-btn" onclick="prefillRoleAssignment('${user.email}')">Guhindura Role</button>
-                </td>
-            `;
-            listEl.appendChild(row);
-        });
-    }
+            if (forceInitial || !show) {
+                step1.style.display = 'inline-block'; 
+                step2.style.display = 'none';
+                approveBtn.style.display = 'inline-block'; 
+            } else { 
+                step1.style.display = 'none';
+                step2.style.display = 'inline-block'; 
+                approveBtn.style.display = 'none';
+            }
+        };
+
+        function renderFinanceDetails(details) {
+            if (details.length === 0) return 'Nta details zihari.';
+            return details.map(item => `
+                <span style="display:block; border-left: 3px solid #ccc; padding-left: 8px; margin-bottom: 5px;">
+                    ${item.title}: **${formatCurrency(item.amount)}**
+                </span>
+            `).join('');
+        }
+        
+        function formatCurrency(amount) {
+            return new Intl.NumberFormat('en-RW', { style: 'currency', currency: 'RWF', minimumFractionDigits: 0 }).format(amount);
+        }
+
+        // -------------------- MASTER DATA FETCHING --------------------
+
+        async function fetchMasterData() {
+            try {
+                // 1. Social Submissions (Pending President)
+                const { data: socialSubmissions, error: errS } = await supabase
+                    .from('submissions')
+                    .select('*')
+                    .eq('advisor_role', 'social')
+                    .eq('status', 'Approved VP'); // Only get VP2 approved
+                if (errS) throw errS;
+
+                // 2. Media Submissions (Pending Presidency)
+                const { data: mediaSubmissions, error: errM } = await supabase
+                    .from('media_submissions')
+                    .select('*')
+                    .eq('status', 'Pending Presidency');
+                if (errM) throw errM;
+
+                // 3. Finance Submissions (Pending Presidency)
+                const { data: financeReports, error: errF } = await supabase
+                    .from('finance_reports')
+                    .select('*')
+                    .eq('status', 'Pending Presidency');
+                if (errF) throw errF;
+                
+                // Combine and Render
+                const allPending = [
+                    ...(socialSubmissions || []), 
+                    ...(mediaSubmissions || []), 
+                    ...(financeReports || [])
+                ].sort((a, b) => new Date(b.submission_date || b.created_at) - new Date(a.submission_date || a.created_at));
+
+                // Metrics Update
+                document.getElementById('master-pending-count').textContent = allPending.length;
+                document.getElementById('social-pending-count').textContent = socialSubmissions.length;
+                document.getElementById('media-pending-count').textContent = mediaSubmissions.length;
+                document.getElementById('finance-pending-count').textContent = financeReports.length;
+
+                renderMasterTable(allPending);
+
+            } catch (error) {
+                console.error('Error fetching master data:', error.message);
+            }
+        }
+        
+        // -------------------- MASTER TABLE RENDERING --------------------
+        
+        function renderMasterTable(submissions) {
+            const tableBody = document.getElementById('master-approvals-body');
+            tableBody.innerHTML = '';
+
+            if (submissions.length === 0) {
+                 tableBody.innerHTML = '<tr><td colspan="5" style="text-align:center; color:var(--muted); padding:20px;">Nta bikorwa bitegereje Kwemezwa n\'a President.</td></tr>';
+                 return;
+            }
+            
+            submissions.forEach(submission => {
+                let title, status, role, statusClass, submissionDate, tableId;
+                
+                if (submission.advisor_role === 'social') {
+                     title = submission.title;
+                     role = 'Social';
+                     status = 'Approved VP'; 
+                     statusClass = 'status-Approved-VP';
+                     submissionDate = submission.submission_date;
+                     tableId = 'submissions';
+                } else if (submission.advisor_role === 'media') {
+                     title = submission.title + ` (${submission.type.toUpperCase()})`;
+                     role = 'Media';
+                     status = 'Pending Presidency';
+                     statusClass = 'status-Pending-Presidency';
+                     submissionDate = submission.submission_date;
+                     tableId = 'media_submissions';
+                } else if (submission.advisor_role === 'finance') {
+                     title = submission.report_title + ` (${submission.report_type})`;
+                     role = 'Finance';
+                     status = 'Pending Presidency';
+                     statusClass = 'status-Finance-Pending';
+                     submissionDate = submission.submission_date;
+                     tableId = 'finance_reports';
+                }
+
+                const row = tableBody.insertRow();
+                row.innerHTML = `
+                    <td>${new Date(submissionDate).toLocaleDateString()}</td>
+                    <td><strong>${title}</strong></td>
+                    <td>${role}</td>
+                    <td><span class="status-badge ${statusClass}">${status}</span></td>
+                    <td class="action-group">
+                        <button class="btn-view" onclick="openApprovalModal(JSON.parse(decodeURIComponent('${encodeURIComponent(JSON.stringify({...submission, tableId}))}')))">Reba & Emeza</button>
+                    </td>
+                `;
+            });
+        }
+        
+        // -------------------- MASTER APPROVAL/REJECTION LOGIC --------------------
+
+        async function deleteOldMedia(type, idToKeep) {
+             let table, bucket, typeColumn;
+             
+             if (type === 'flayer') {
+                 table = 'media_submissions';
+                 bucket = FLAYER_BUCKET;
+                 typeColumn = 'flayer';
+             } else if (type === 'photo') {
+                 table = 'media_submissions';
+                 bucket = PHOTO_BUCKET;
+                 typeColumn = 'photo';
+             } else {
+                 return; 
+             }
+             
+             // 1. Baza ibiri Published ubu ariko bitandukanye n'iyo tugiye kwemeza
+             const { data: oldItems, error: fetchError } = await supabase
+                 .from(table)
+                 .select('id, storage_url')
+                 .eq('type', typeColumn)
+                 .eq('status', 'Published')
+                 .neq('id', idToKeep); 
+
+             if (fetchError) throw fetchError;
+             
+             if (oldItems && oldItems.length > 0) {
+                 for (const item of oldItems) {
+                     // 2. Siba File muri Storage
+                     if (item.storage_url) {
+                          const fileName = item.storage_url.substring(item.storage_url.lastIndexOf('/') + 1);
+                          const { error: storageError } = await supabase.storage
+                              .from(bucket)
+                              .remove([`${typeColumn}/${fileName}`]); // Byakozwe mu media dashboard
+                          if (storageError) console.warn('Storage delete warning:', storageError.message);
+                     }
+                     
+                     // 3. Siba muri Database
+                     const { error: dbDeleteError } = await supabase
+                         .from(table)
+                         .delete()
+                         .eq('id', item.id);
+                         
+                     if (dbDeleteError) console.error('DB delete error:', dbDeleteError.message);
+                 }
+             }
+             
+             // Gukora clean up kuza Published zarengeje umubare wa 4
+             if (type === 'photo') {
+                  const maxPhotos = 4;
+                  const { data: allPublishedPhotos } = await supabase
+                       .from(table)
+                       .select('id, storage_url')
+                       .eq('type', typeColumn)
+                       .eq('status', 'Published')
+                       .order('published_date', { ascending: false }); // Latest first
+
+                  if (allPublishedPhotos && allPublishedPhotos.length > maxPhotos) {
+                      const itemsToDelete = allPublishedPhotos.slice(maxPhotos);
+                      for (const item of itemsToDelete) {
+                          // 2. Siba File muri Storage
+                          if (item.storage_url) {
+                                const fileName = item.storage_url.substring(item.storage_url.lastIndexOf('/') + 1);
+                                const { error: storageError } = await supabase.storage
+                                    .from(bucket)
+                                    .remove([`${typeColumn}/${fileName}`]); 
+                                if (storageError) console.warn('Storage delete warning:', storageError.message);
+                          }
+                          // 3. Siba muri Database
+                          await supabase.from(table).delete().eq('id', item.id);
+                      }
+                  }
+             }
+        }
+
+
+        window.handleFinalAction = async (action) => {
+            if (!currentSubmission) return;
+
+            let rejectionReason = null;
+            if (action === 'reject') {
+                rejectionReason = document.getElementById('rejection-reason').value.trim();
+                if (!rejectionReason) {
+                    document.getElementById('submissionMessage').textContent = 'Ongeramo impamvu yo gusubiza inyuma!';
+                    document.getElementById('submissionMessage').className = 'message-area message-error';
+                    return;
+                }
+            }
+            
+            await updateSubmissionStatus(currentSubmission, action, rejectionReason);
+            currentSubmission = null;
+        };
+        
+        async function updateSubmissionStatus(submission, action, rejectionReason) {
+             const messageArea = document.getElementById('submissionMessage');
+             messageArea.textContent = 'Gukora Action...';
+             messageArea.className = 'message-area';
+
+             const tableId = submission.tableId;
+             const id = submission.id;
+             let newStatus = action === 'approve' ? 'Published' : 'Rejected'; 
+             
+             let updateData = { 
+                 status: newStatus,
+                 presidency_approved: action === 'approve', 
+             };
+             if (rejectionReason) {
+                  updateData.rejection_reason = rejectionReason;
+             }
+             if (action === 'approve' && (tableId === 'media_submissions' || tableId === 'finance_reports')) {
+                 updateData.published_date = new Date().toISOString();
+             }
+
+             try {
+                 // 1. Gukora UPDATE muri Supabase
+                 const { error } = await supabase
+                     .from(tableId)
+                     .update(updateData)
+                     .eq('id', id);
+
+                 if (error) throw error;
+                 
+                 // 2. KORA MEDIA CLEANUP (Flayer/Photo)
+                 if (action === 'approve' && tableId === 'media_submissions') {
+                     await deleteOldMedia(submission.type, id);
+                 }
+
+
+                 messageArea.textContent = `Submission yagizwe: ${newStatus} neza!`;
+                 messageArea.className = 'message-area message-success';
+                 
+                 setTimeout(() => {
+                     closeModal();
+                     fetchMasterData(); // Refresh table
+                 }, 1500);
+             } catch (error) {
+                 messageArea.textContent = `Error mu gukora ${action}: ` + error.message;
+                 messageArea.className = 'message-area message-error';
+                 console.error('Final Approval Error:', error);
+             }
+        }
+
+
+        // Initialize on load
+        document.addEventListener('DOMContentLoaded', fetchMasterData);
+    </script>
+
+
+    <div class="dashboard-container">
+        <div class="sidebar">
+            <h2>PRESIDENT MUKURU</h2>
+            <p style="color:var(--gold); font-size:1.1rem; font-weight:700; margin-bottom: 20px;">Master Control</p>
+            <a href="#">Dashboard (Overview)</a>
+            <a href="#">Gahunda za Evangelism (VP1)</a>
+            <a href="#">Amateka ya Finance</a>
+            <a href="#">Genzura Abayobozi</a>
+            <a href="#">Logout</a>
+        </div>
+
+        <div class="main-content">
+            <h1>Dashibodi ya President - Master Control</h1>
+            <p class="role-subtitle">Inshingano: Kwemeza bwa nyuma (Final Approval) ku Bikoresho byose bya CEP.</p>
+            
+            <div class="metric-cards">
+                <div class="card master-pending">
+                    <h3>TOTAL ZITEGEREJE KWEMEZWA</h3>
+                    <p id="master-pending-count">0</p>
+                </div>
+                <div class="card social-pending">
+                    <h3>Social (VP2 Approved)</h3>
+                    <p id="social-pending-count">0</p>
+                </div>
+                <div class="card media-pending">
+                    <h3>Media (Homepage)</h3>
+                    <p id="media-pending-count">0</p>
+                </div>
+                <div class="card finance-pending">
+                    <h3>Finance (Raporo)</h3>
+                    <p id="finance-pending-count">0</p>
+                </div>
+            </div>
+
+            <h2 class="section-title">Ibikorwa byose Bikeneye Kwemezwa Bwa Nyuma (Final Approval)</h2>
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th style="width:10%;">Itariki</th>
+                        <th style="width:40%;">Umutwe w'Igikorwa/Raporo</th>
+                        <th style="width:15%;">Umuyobozi (Role)</th>
+                        <th style="width:20%;">Status</th>
+                        <th style="width:15%;">Igikorwa</th>
+                    </tr>
+                </thead>
+                <tbody id="master-approvals-body">
+                    <tr><td colspan="5" style="text-align:center; color:var(--muted);">Gutegereza Data...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
     
-    // Function yo gushyira email mu gice cyo guhindura role
-    window.prefillRoleAssignment = (email) => {
-        document.getElementById('memberEmail').value = email;
-        showSection('role_management');
-        document.getElementById('memberEmail').focus();
-    };
+    <div id="approvalModal" class="modal">
+        <div class="modal-content">
+            <span class="close-button" onclick="closeModal()">&times;</span>
+            <h2>Fata Icyemezo (Final Approval)</h2>
+            <p id="modal-type" style="color:var(--gold); font-weight: 700;"></p>
 
+            <div class="submission-detail">
+                <h3>Umutwe: <span id="modal-submission-title" style="color:var(--accent);"></span></h3>
+                <p id="modal-submission-content"></p>
+            </div>
+            
+            <p id="submissionMessage" class="message-area"></p>
 
-    document.getElementById('roleManagementForm').addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const emailOrId = document.getElementById('memberEmail').value.trim();
-        const roleName = document.getElementById('newRole').value;
-        const btn = document.getElementById('btnAssignRole');
+            <div id="rejection-area" style="display:none;">
+                <label for="rejection-reason">Impamvu yo Gusubiza Inyuma (Bitegetswe):</label>
+                <textarea id="rejection-reason" rows="3" placeholder="Sobanura neza impamvu iyi gahunda itemewe/Itashyizweho..."></textarea>
+            </div>
 
-        roleAlert.style.display = 'none';
-        btn.disabled = true;
-        btn.innerText = 'Birimo...';
-        
-        // 1. Kubona User ID kuva kuri Email
-        const { data: userToUpdate, error: userFetchError } = await supabase
-            .from('users')
-            .select('id')
-            .eq('email', emailOrId) // cyangwa ugakoresha eq('id', emailOrId)
-            .single();
-
-        if (userFetchError || !userToUpdate) {
-            showAlert(roleAlert, `User ntibonetse muri database (Email/ID ntabwo yanditse).`, 'error');
-            btn.disabled = false;
-            btn.innerText = 'Shyiraho/Hagarika Role';
-            return;
-        }
-
-        // 2. Kubona Role ID nshya
-        const roleData = allRoles.find(r => r.name === roleName);
-        if (!roleData) {
-            showAlert(roleAlert, `Role yatowe ntabwo ibonetse.`, 'error');
-            btn.disabled = false;
-            btn.innerText = 'Shyiraho/Hagarika Role';
-            return;
-        }
-
-        const roleId = roleData.id;
-
-        // 3. Gutanga Role mu buryo bwa UPSERT
-        const { error: roleAssignmentError } = await supabase
-            .from('user_roles')
-            .upsert({ user_id: userToUpdate.id, role_id: roleId }, { onConflict: 'user_id, role_id' });
-            // Iyi ikeneye RLS Policy yemereye President gukora INSERT/UPDATE kuri user_roles
-
-        if (roleAssignmentError) {
-            showAlert(roleAlert, `Gutanga Role byanze: ${roleAssignmentError.message}`, 'error');
-        } else {
-            showAlert(roleAlert, `Role ya ${roleName.toUpperCase()} yashyizwe kuri ${emailOrId} neza!`, 'success');
-            document.getElementById('roleManagementForm').reset();
-            fetchAllUsers(); // Kongera kureba list y'abakristo
-        }
-
-        btn.disabled = false;
-        btn.innerText = 'Shyiraho/Hagarika Role';
-    });
-
-
-    // -------------------------------------------------------------
-    // INITIALIZATION & RLS Check
-    // -------------------------------------------------------------
-    
-    // Gushakisha Role y'Umukristo
-    async function fetchUserRole(user) {
-        const { data: userRoleData } = await supabase
-            .from('user_roles')
-            .select('role:roles(name)')
-            .eq('user_id', user.id);
-        
-        if (userRoleData && userRoleData.length > 0) {
-            return userRoleData.map(ur => ur.role.name);
-        }
-        return ['member'];
-    }
-
-    (async function initializeAdminDashboard() {
-        const { data: { session } } = await supabase.auth.getSession();
-
-        if (!session?.user) {
-            window.location.href = 'login.html';
-            return;
-        }
-        
-        // Kureba niba Umukristo afite Role y'Ubuyobozi
-        const userRoles = await fetchUserRole(session.user);
-        currentUserRole = userRoles[0]; // Koresha role y'ibanze
-        
-        // Roles zemerera kwinjira muri Admin Dashboard
-        const adminRoles = ['president', 'vice_president', 'secretary', 'accountant'];
-
-        if (!adminRoles.some(role => userRoles.includes(role))) {
-            // Niba atari Admin, oherereza kuri dashboard y'abasanzwe
-            alert("Ntabwo wemerewe kwinjira muri Admin Dashboard. Ugomba kuba uri umwe mu Bayobozi.");
-            window.location.href = 'dashboard.html'; 
-            return;
-        }
-        
-        // Kwemeza ko Umukristo ari Admin
-        document.getElementById('adminRoleDisplay').innerText = userRoles.join(' / ').toUpperCase();
-        showSection('overview');
-        
-        // Gukurura roles zose zizakoreshwa
-        await fetchRoles(); 
-
-        // Kugira ngo Secretary akore byihuse
-        if (userRoles.includes('secretary') || userRoles.includes('president')) {
-             fetchServiceRequests();
-        }
-    })();
-
-</script>
+            <div class="modal-actions">
+                <button id="publish-button" class="btn-modal-publish" onclick="handleFinalAction('approve')">Kwemeza & Publish</button>
+                <button id="reject-step1" class="btn-modal-reject" onclick="toggleRejection(true)">Subiza Inyuma</button>
+                <button id="reject-step2" class="btn-modal-reject" style="display:none;" onclick="handleFinalAction('reject')">Komeza Gusubiza Inyuma</button>
+                <button class="btn-modal-close" onclick="closeModal()">Funga</button>
+            </div>
+        </div>
+    </div>
 </body>
 </html>
